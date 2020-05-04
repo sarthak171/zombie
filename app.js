@@ -26,16 +26,35 @@ var Player = function(sid) {
 		pUp:false,
 		pDown:false,
 		vel:1,
+		cnt:0,
 	}
 	self.updatePos = function(){
+		self.cnt = 0;
 		if(self.pRight)
-			self.x += self.vel;
+			self.cnt+=1;
 		if(self.pLeft)
-			self.x -= self.vel;
+			self.cnt+=1;
 		if(self.pUp)
+			self.cnt+=1;
+		if(self.pDown)
+			self.cnt+=1;
+		if(self.cnt>1){
+			self.vel /=2;
+		}
+		if(self.pRight){
+			self.x += self.vel;
+		}
+		if(self.pLeft){
+			self.x -= self.vel;
+		}
+		if(self.pUp){
+			hasGone = true;
 			self.y -= self.vel;
+		}
 		if(self.pDown)
 			self.y += self.vel;
+		if(self.cnt>1)
+			self.vel *= 2;
 	}
 	return self;
 }
@@ -58,15 +77,18 @@ io.sockets.on('connection', function(socket){
 	});
 
 	socket.on('keyPress',function(data){
-		if(data.inputID === 'r')
+		if(data.inputID === 'r'){
 			player.pRight = data.state;
-		if(data.inputID === 'l')
+		}
+		if(data.inputID === 'l'){
 			player.pLeft = data.state;
-		if(data.inputID === 'd')
+		}
+		if(data.inputID === 'd'){
 			player.pDown = data.state;
-		if(data.inputID === 'u')
+		}
+		if(data.inputID === 'u'){
 			player.pUp = data.state;
-
+		}
 	});
 });
 
