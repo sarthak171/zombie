@@ -20,7 +20,6 @@ var Player = function(sid) {
 		x:250,
 		y:250,
 		id:sid,
-		number:"" + Math.floor(10 * Math.random()),
 		pRight:false,
 		pLeft:false,
 		pUp:false,

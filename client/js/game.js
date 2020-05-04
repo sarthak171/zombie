@@ -2,9 +2,6 @@ var canvas = document.getElementById("canvas");
 var ctx = canvas.getContext('2d');
 var socket = io();
 
-socket.emit('move', {
-  reason:'move'
-});
 
 socket.on('newPositions', function(data){
   ctx.clearRect(0,0,500,500);
