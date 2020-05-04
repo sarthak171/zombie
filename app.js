@@ -28,7 +28,7 @@ var Player = function(sid) {
 		vel:1,
 		cnt:0,
 	}
-	self.updatePos = function(){
+	self.updatePos = function(t){
 		self.cnt = 0;
 		if(self.pRight)
 			self.cnt+=1;
@@ -38,22 +38,22 @@ var Player = function(sid) {
 			self.cnt+=1;
 		if(self.pDown)
 			self.cnt+=1;
-		if(self.cnt>1){
+		if(self.cnt==2){
 			self.vel /=2;
 		}
 		if(self.pRight){
-			self.x += self.vel;
+			self.x += self.vel*t;
 		}
 		if(self.pLeft){
-			self.x -= self.vel;
+			self.x -= self.vel*t
 		}
 		if(self.pUp){
 			hasGone = true;
-			self.y -= self.vel;
+			self.y -= self.vel*t;
 		}
 		if(self.pDown)
-			self.y += self.vel;
-		if(self.cnt>1)
+			self.y += self.vel*t;
+		if(self.cnt==2)
 			self.vel *= 2;
 	}
 	return self;
@@ -92,11 +92,14 @@ io.sockets.on('connection', function(socket){
 	});
 });
 
+var lastUpdateTime = (new Date()).getTime();
 setInterval(function(){
 	var pack = [];
 	for(var i in PLAYER_LIST){
+		var currentTime = (new Date()).getTime();
+		var tDiff = currentTime - lastUpdatetime;
 		var player=PLAYER_LIST[i];
-		player.updatePos();
+		player.updatePos(tDiff);
 		pack.push({
 			x:player.x,
 			y:player.y,
@@ -105,4 +108,5 @@ setInterval(function(){
 	for(var i in SOCKET_LIST){
 		SOCKET_LIST[i].emit('newPositions',pack)
 	}
+	lastUpdatetime = currentTime;
 });
