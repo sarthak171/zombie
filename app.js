@@ -108,4 +108,4 @@ setInterval(function(){
 		SOCKET_LIST[i].emit('newPositions',pack)
 	}
 	lastUpdatetime = currentTime;
-});
+}, 1000/60);
