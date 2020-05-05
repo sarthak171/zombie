@@ -32,3 +32,19 @@ document.onkeyup = function(event){
   if(event.keyCode === 87)
     socket.emit('keyPress', {inputID:'u',state:false});
 }
+
+document.onmousedown = function(event){
+  socket.emit('mouse',{
+    mouseDown:true,
+    x:(event.clientX-size.width/2),
+    y:(event.clientY-size.height/2),
+  });
+}
+
+document.onmouseup = function(event) {
+  socket.emit('mouse',{
+    mouseDown:false,
+    x:(event.clientX-size.width/2),
+    y:(event.clientY-size.height/2),
+  });
+}
