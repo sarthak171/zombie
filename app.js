@@ -23,6 +23,7 @@ var Player = function(sid) {
 		pDown:false,
 		vel:1,
 		cnt:0,
+		angle:45,
 	}
 	self.updatePos = function(t){
 		self.cnt = 0;
@@ -87,7 +88,7 @@ Player.update = function(){
 		pack.push({
 			x:player.x,
 			y:player.y,
-			number:player.number
+			id:player.id
 		});
 	}
 	lastUpdatetime = currentTime;
@@ -132,6 +133,9 @@ io.sockets.on('connection', function(socket){
 	socket.id = Math.random();
 	SOCKET_LIST[socket.id] = socket;
 	Player.onConnect(socket);
+
+	var data = [socket.id];
+	SOCKET_LIST[socket.id].emit('initial', data);
 
 	socket.on('disconnect',function(){
 		console.log('socket disconnect');

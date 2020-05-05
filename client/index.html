@@ -1,4 +1,15 @@
-<canvas id="canvas" width="500" height="500"  style="border:1px solid #000000;"></canvas>
-<img id="player" src="client/img/Player.png"></img>
-<script src="/socket.io/socket.io.js"></script>
-<script src="client/js/game.js"></script>
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>A Multiplayer Game</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <link rel="stylesheet" type='text/css' href="/client/styles.css">
+  </head>
+  <body>
+    <canvas id="canvas" width="window.innerWidth" height="window.innerHeight"></canvas>
+    <img id="player1" src="client/img/Player.png"></img>
+    <img id="wall1" src="client/img/x10LightWall.png"></img>
+    <img id="floor1" src="client/img/x10Floor.png"></img>
+    <script src="/client/js/game.js"></script>
+  </body>
+</html>
