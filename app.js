@@ -12,9 +12,6 @@ server.listen(5000);
 
 
 var SOCKET_LIST = {};
-var PLAYER_LIST = {};
-
-
 var Player = function(sid) {
 	var self = {
 		x:250,
@@ -55,27 +52,13 @@ var Player = function(sid) {
 		if(self.cnt==2)
 			self.vel *= Math.sqrt(2);
 	}
+	Player.list[self.id] = self;
 	return self;
 }
-
-
-var io = require('socket.io')(server,{});
-
-io.sockets.on('connection', function(socket){
-	console.log('socket connect');
-	socket.id = Math.random();
-	SOCKET_LIST[socket.id] = socket;
-
-	var player = Player(socket.id);
-	PLAYER_LIST[socket.id] = player;
-
-	socket.on('disconnect',function(){
-		console.log('socket disconnect');
-		delete SOCKET_LIST[socket.id];
-		delete PLAYER_LIST[socket.id];
-	});
-
-	socket.on('keyPress',function(data){
+Player.list = {};
+Player.onConnect = function(socket){
+		var player = Player(socket.id);
+		socket.on('keyPress',function(data){
 		if(data.inputID === 'r'){
 			player.pRight = data.state;
 		}
@@ -89,23 +72,81 @@ io.sockets.on('connection', function(socket){
 			player.pUp = data.state;
 		}
 	});
-});
-
-var lastUpdateTime = (new Date()).getTime();
-setInterval(function(){
+} 
+Player.onDisconnect = function(socket){
+	delete Player.list[socket.id];
+}
+var lastUpdatetime = (new Date()).getTime();
+Player.update = function(){
 	var pack = [];
-	for(var i in PLAYER_LIST){
+	for(var i in Player.list){
+		var player = Player.list[i];
 		var currentTime = (new Date()).getTime();
 		var tDiff = currentTime - lastUpdatetime;
-		var player=PLAYER_LIST[i];
 		player.updatePos(tDiff);
 		pack.push({
 			x:player.x,
 			y:player.y,
+			number:player.number
 		});
+	}
+	lastUpdatetime = currentTime;
+	return pack;
+}
+
+
+var Bullet = function(ang) {
+	var self = {
+		x:250,
+		y:250,
+		id:Math.random(),
+		angle:ang,
+		vel:2
+	}
+	self.updateBul = function(){
+		self.x += Math.cos(self.angle/180*Math.PI)*vel;
+		self.y += Math.sin(self.angle/180*Math.PI)*vel;
+	}
+	Bullet.list[self.id] = self;
+	return self;
+}
+Bullet.list = {};
+Bullet.update = function(){
+	var pack =[];
+	for(var i in Bullet.list){
+		var bullet = Bullet.list[i];
+		bullet.updateBul();
+		pack.push({
+			x:bullet.x,
+			y:bullet.y,
+		});
+	}
+	return pack;
+}
+
+
+
+var io = require('socket.io')(server,{});
+io.sockets.on('connection', function(socket){
+	console.log('socket connect');
+	socket.id = Math.random();
+	SOCKET_LIST[socket.id] = socket;
+	Player.onConnect(socket);
+
+	socket.on('disconnect',function(){
+		console.log('socket disconnect');
+		delete SOCKET_LIST[socket.id];
+		Player.onDisconnect(socket);
+	});
+});
+
+
+setInterval(function(){
+	var pack = {
+		player:Player.update(),
+		bullet:Bullet.update(),
 	}
 	for(var i in SOCKET_LIST){
 		SOCKET_LIST[i].emit('newPositions',pack)
 	}
-	lastUpdatetime = currentTime;
 }, 1000/60);

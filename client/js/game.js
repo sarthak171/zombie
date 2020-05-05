@@ -5,9 +5,10 @@ var socket = io();
 
 socket.on('newPositions', function(data){
   ctx.clearRect(0,0,500,500);
-  for(var i=0;i<data.length;i++){
+  console.log(data)
+  for(var i=0;i<data.player.length;i++){
     var img = document.getElementById("player")
-    ctx.drawImage(img,data[i].x,data[i].y);
+    ctx.drawImage(img,data.player[i].x,data.player[i].y);
   }
 });
 
