@@ -38,7 +38,7 @@ var Player = function(sid) {
 		if(self.pDown)
 			self.cnt+=1;
 		if(self.cnt==2){
-			self.vel /=2;
+			self.vel /=Math.sqrt(2);
 		}
 		if(self.pRight){
 			self.x += self.vel*t;
@@ -53,7 +53,7 @@ var Player = function(sid) {
 		if(self.pDown)
 			self.y += self.vel*t;
 		if(self.cnt==2)
-			self.vel *= 2;
+			self.vel *= Math.sqrt(2);
 	}
 	return self;
 }
