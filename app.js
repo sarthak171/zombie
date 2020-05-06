@@ -9,53 +9,85 @@ app.get('/',function(req,res) {
 app.use('/client',express.static(__dirname+'/client'))
 server.listen(5000);
 
-
+var map = [[
+	[0,0,0,0,0,1],
+	[0,0,0,1,0,1],
+	[0,0,0,1,0,1],
+	[1,0,1,1,0,0],
+	[1,0,0,0,0,0],
+	[1,1,1,0,0,0],  
+  ]];
 
 var SOCKET_LIST = {};
 var Player = function(sid) {
 	var self = {
-		x:250,
-		y:250,
+		x:1,
+		y:1,
 		id:sid,
 		pRight:false,
 		pLeft:false,
 		pUp:false,
 		pDown:false,
-		vel:1,
-		cnt:0,
-		angle:45,
+		rl:false,
+		rr:false,
+		au:false,
+		ad:false,
+		vel:0.1,
+		rvel:3.5,
+		avel:.01,
+		angle:135,
+		alt:0.3,
+		mapId:0,
 	}
 	self.updatePos = function(t){
-		self.cnt = 0;
-		if(self.pRight)
-			self.cnt+=1;
-		if(self.pLeft)
-			self.cnt+=1;
-		if(self.pUp)
-			self.cnt+=1;
-		if(self.pDown)
-			self.cnt+=1;
-		if(self.cnt==2){
-			self.vel /=Math.sqrt(2);
+		var locmap = map[self.mapId];
+
+		if(self.rl) self.angle-=self.rvel;
+		if(self.rr) self.angle+=self.rvel;
+		if(self.au) self.alt-=self.avel;
+		if(self.ad) self.alt+=self.avel;
+
+		if(self.alt<0) self.alt=0;
+		if(self.alt>0.9) self.alt=0.9;
+
+		var ox = self.x;
+		var oy = self.y;
+		var xd = 0;
+		var yd = 0;
+
+		if(self.pRight) xd++;
+		if(self.pLeft) xd--;
+		if(self.pUp) yd--;
+		if(self.pDown) yd++;
+		
+		if(xd!=0 && yd!=0) self.vel /=Math.sqrt(2);
+		xd*=self.vel;
+		yd*=self.vel;
+		if(xd!=0 && yd!=0) self.vel *=Math.sqrt(2);
+
+		var rad = (360-self.angle)*Math.PI/180;
+		self.x+=xd*Math.cos(2*Math.PI-rad);
+		self.x+=yd*Math.sin(rad);
+		self.y+=xd*Math.sin(2*Math.PI-rad);
+		self.y+=yd*Math.cos(rad);
+		
+		if(isValid(self.mapId, self.x, self.y) && locmap[self.y | 0][self.x | 0]==0) return;
+		if(!isValid(self.mapId, self.x, oy) || locmap[oy | 0][self.x | 0]!=0) {
+			self.x = (self.x>ox) ? (Math.floor(self.x)-.0001): (ox | 0);
 		}
-		if(self.pRight){
-			self.x += self.vel*t;
+		if(!isValid(self.mapId, ox, self.y) || locmap[self.y | 0][ox | 0]!=0) {
+			self.y = (self.y>oy) ? (Math.floor(self.y)-.0001): (oy | 0);
 		}
-		if(self.pLeft){
-			self.x -= self.vel*t
-		}
-		if(self.pUp){
-			hasGone = true;
-			self.y -= self.vel*t;
-		}
-		if(self.pDown)
-			self.y += self.vel*t;
-		if(self.cnt==2)
-			self.vel *= Math.sqrt(2);
 	}
 	Player.list[self.id] = self;
 	return self;
 }
+
+function isValid(mapId, x, y) {
+	if(x>=0 && x<map[mapId][0].length && y>=0 && y<map[mapId].length) return true;
+	else return false;
+}
+
 Player.list = {};
 Player.onConnect = function(socket){
 		var player = Player(socket.id);
@@ -72,6 +104,18 @@ Player.onConnect = function(socket){
 		if(data.inputID === 'u'){
 			player.pUp = data.state;
 		}
+		if(data.inputID === 'rl'){
+			player.rl = data.state;
+		}
+		if(data.inputID === 'rr'){
+			player.rr = data.state;
+		}
+		if(data.inputID === 'au'){
+			player.au = data.state;
+		}
+		if(data.inputID === 'ad'){
+			player.ad = data.state;
+		}
 	});
 } 
 Player.onDisconnect = function(socket){
@@ -79,20 +123,13 @@ Player.onDisconnect = function(socket){
 }
 var lastUpdatetime = (new Date()).getTime();
 Player.update = function(){
-	var pack = [];
+	var currentTime = (new Date()).getTime();
+	var tDiff = currentTime - lastUpdatetime;
 	for(var i in Player.list){
-		var player = Player.list[i];
-		var currentTime = (new Date()).getTime();
-		var tDiff = currentTime - lastUpdatetime;
-		player.updatePos(tDiff);
-		pack.push({
-			x:player.x,
-			y:player.y,
-			id:player.id
-		});
+		Player.list[i].updatePos(tDiff);
 	}
 	lastUpdatetime = currentTime;
-	return pack;
+	return Player.list;
 }
 
 
@@ -111,16 +148,14 @@ var Bullet = function(ang) {
 	Bullet.list[self.id] = self;
 	return self;
 }
+
 Bullet.list = {};
 Bullet.update = function(){
-	var pack =[];
+	var pack ={};
 	for(var i in Bullet.list){
 		var bullet = Bullet.list[i];
 		bullet.updateBul();
-		pack.push({
-			x:bullet.x,
-			y:bullet.y,
-		});
+		pack[i] = bullet;
 	}
 	return pack;
 }
@@ -130,7 +165,6 @@ Bullet.update = function(){
 var io = require('socket.io')(server,{});
 io.sockets.on('connection', function(socket){
 	console.log('socket connect');
-	socket.id = Math.random();
 	SOCKET_LIST[socket.id] = socket;
 	Player.onConnect(socket);
 
@@ -150,6 +184,7 @@ setInterval(function(){
 		player:Player.update(),
 		bullet:Bullet.update(),
 	}
+
 	for(var i in SOCKET_LIST){
 		SOCKET_LIST[i].emit('newPositions',pack)
 	}

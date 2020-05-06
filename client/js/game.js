@@ -9,14 +9,14 @@ var size = {
 }
 
 var ratio = .7;
-var map = [
+var map = [[
   [0,0,0,0,0,1],
   [0,0,0,1,0,1],
   [0,0,0,1,0,1],
   [1,0,1,1,0,0],
   [1,0,0,0,0,0],
   [1,1,1,0,0,0],  
-];
+]];
 
 var player1img = document.getElementById("player1");
 var wall1img = document.getElementById("wall1");
@@ -28,27 +28,48 @@ document.getElementById("floor1").style.display = "none";
 
 
 socket.on('newPositions', function(data){
+  if(id == null) return;
+  if(data.player[id]==null) return;
+
   updateSize();
   canvas.width = size.width;
   canvas.height = size.height;
   ctx = canvas.getContext('2d');
+  ctx.imageSmoothingEnabled = false;
+
+  drawfloor(data);
+  
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.drawImage(player1img,size.width/2-size.width/80,size.height/2-size.width/12, size.width/40, size.width/12);
+});
+
+function drawfloor(data) {
+  var locplayer = data.player[id];
+  var locmap = map[locplayer.mapId];
 
   var lw = size.width/15;
-  var rotation_degs = 45,
-    rotation_rads = degs_to_rads(rotation_degs),
-  angle_sine = Math.sin(rotation_rads),
-  angle_cosine = Math.cos(rotation_rads);
+  var radian = (360-locplayer.angle) / 180 * Math.PI;
+  var sin = Math.sin(radian);
+  var cos = Math.cos(radian);
 
-  //ctx.drawImage(player1img, 0, 0, );
+  ctx.setTransform(
+    cos, 
+    sin*(1-locplayer.alt), 
+    -sin, 
+    cos * (1-locplayer.alt),
+    size.width/2,
+    size.height/2,
+  );
 
-  for(var i=0;i<data.player.length;i++){
-    //ctx.drawImage(player1img,data.player[i].x,data.player[i].y, size.width/40, size.width/12);
-    ctx.drawImage(player1img,size.width/2-size.width/80,size.height/2-size.width/24, size.width/40, size.width/12);
-    ctx.setTransform(angle_cosine, angle_sine, -angle_sine, angle_cosine, 0, 0);
-    ctx.drawImage(player1img,size.width/2-size.width/80,size.height/2-size.width/24, size.width/40, size.width/12);
-
+  for(var i=0; i<locmap.length; i++) {
+    for(var j=0; j<locmap[i].length; j++) {
+      if(locmap[i][j]!=0) continue;
+      var xdif = locplayer.x-j;
+      var ydif = locplayer.y-i;
+      ctx.drawImage(floor1img, -xdif*lw, -ydif*lw, lw+2, lw+1);
+    }
   }
-});
+}
 
 function degs_to_rads (degs) { return degs / (180/Math.PI); }
 function rads_to_degs (rads) { return rads * (180/Math.PI); }
@@ -73,6 +94,14 @@ document.onkeydown = function(event){
     socket.emit('keyPress', {inputID:'l',state:true});
   if(event.keyCode === 87)
     socket.emit('keyPress', {inputID:'u',state:true});
+  if(event.keyCode === 81)
+    socket.emit('keyPress', {inputID:'rl',state:true});
+  if(event.keyCode === 69)
+    socket.emit('keyPress', {inputID:'rr',state:true});
+  if(event.keyCode === 38)
+    socket.emit('keyPress', {inputID:'au',state:true});
+  if(event.keyCode === 40)
+    socket.emit('keyPress', {inputID:'ad',state:true});
 }
 document.onkeyup = function(event){
   if(event.keyCode === 68)
@@ -83,6 +112,14 @@ document.onkeyup = function(event){
     socket.emit('keyPress', {inputID:'l',state:false});
   if(event.keyCode === 87)
     socket.emit('keyPress', {inputID:'u',state:false});
+  if(event.keyCode === 81)
+    socket.emit('keyPress', {inputID:'rl',state:false});
+  if(event.keyCode === 69)
+    socket.emit('keyPress', {inputID:'rr',state:false});
+  if(event.keyCode === 38)
+    socket.emit('keyPress', {inputID:'au',state:false});
+  if(event.keyCode === 40)
+    socket.emit('keyPress', {inputID:'ad',state:false});
 }
 
 document.onmousedown = function(event){
