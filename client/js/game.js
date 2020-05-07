@@ -38,6 +38,7 @@ socket.on('newPositions', function(data){
   ctx.imageSmoothingEnabled = false;
 
   drawfloor(data);
+  drawWalls(data);
   
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.drawImage(player1img,size.width/2-size.width/80,size.height/2-size.width/12, size.width/40, size.width/12);
@@ -69,6 +70,34 @@ function drawfloor(data) {
       ctx.drawImage(floor1img, -xdif*lw, -ydif*lw, lw+2, lw+1);
     }
   }
+}
+
+function drawWalls(data) {
+  var locplayer = data.player[id];
+  var locmap = map[locplayer.mapId];
+
+  var lw = size.width/15;
+  var lh = 2*lw;
+  
+  var radian = (360-locplayer.angle) / 180 * Math.PI;
+  var xdif = locplayer.x-5;
+  var ydif = locplayer.y-0;
+  var phase = (360-Math.atan(ydif/xdif)) / 180 * Math.PI;;
+  
+  var sin = Math.sin(radian);
+  var cos = Math.cos(radian);
+  ctx.setTransform(
+    cos, 
+    sin*(1-locplayer.alt), 
+    0, 
+    cos * locplayer.alt,
+    (size.width/2)+50*Math.sqrt(xdif**2+ydif**2)*Math.cos(radian+phase),
+    (size.height/2)+50*Math.sqrt(xdif**2+ydif**2)*Math.sin(radian+phase)
+  );
+  
+  
+  
+  ctx.drawImage(wall1img, -lw/2, -lh/2, lw, lh);
 }
 
 function degs_to_rads (degs) { return degs / (180/Math.PI); }
