@@ -48,6 +48,7 @@ var Player = function(sid) {
 		angle:45,
 		alt:0.8,
 		mapId:0,
+		imgId:0,
 	}
 	self.updatePos = function(t){
 		if(self.rl) self.angle+=self.rvel;

@@ -37,6 +37,11 @@ document.getElementById("player1").style.display = "none";
 document.getElementById("wall1").style.display = "none";
 document.getElementById("floor1").style.display = "none";
 
+var playerimgs = [player1img];
+var floorimgs = [floor1img];
+var wallimgs = [wall1img];
+
+
 
 socket.on('newPositions', function(data){
   if(id == null) return;
@@ -49,10 +54,10 @@ socket.on('newPositions', function(data){
   ctx.imageSmoothingEnabled = false;
 
   drawfloor(data);
-  //drawWalls(data);
+  //drawObj(data);
   
   ctx.setTransform(1, 0, 0, 1, 0, 0);
-  ctx.drawImage(player1img,size.width/2-size.width/80,size.height/2-size.width/12, size.width/40, size.width/12);
+  ctx.drawImage(playerimgs[data.player[id].imgId],size.width/2-size.width/80,size.height/2-size.width/12, size.width/40, size.width/12);
 });
 
 function drawfloor(data) {
@@ -83,7 +88,55 @@ function drawfloor(data) {
   }
 }
 
-function drawWalls(data) {
+function drawObj(data) {
+  var objvals = [];
+  Array.prototype.push.apply(objvals, getWalls(data));
+  Array.prototype.push.apply(objvals, getObjects(data));
+  Array.prototype.push.apply(objvals, getPlayers(data));
+
+  var objinds = [];
+  for(var i=0; i<objvals.length; i++) {
+    objinds.push(i);
+  }
+
+  objinds.sort(function(a, b){return objvals[b][1] - objvals[a][1]});
+
+  for(var i=0; i<objinds.length; i++) {
+    //[sx, sy, t1, t2, t3, t4, t5, t6, w, h, type, img]
+    var dobj = objinds[i];
+    
+    ctx.setTransform(
+      dobj[i][2], 
+      dobj[i][3], 
+      dobj[i][4], 
+      dobj[i][5], 
+      dobj[i][6], 
+      dobj[i][7], 
+    );
+    
+    var dimg;
+    var isImg = true;
+    
+    switch(dobj[i][10]) {
+      case 'p': dimg = playerimgs[dobj[11]];
+        break;
+      case 'w': dimg = wallimgs[dobj[11]];
+        break;
+      default: isImg = false;
+        break;
+    }
+
+    if(isImg) {
+      ctx.drawImage(dimg, -dobj[8]/2, -dobj[9]/2, dobj[8], dobj[9]);
+    } else {
+      ctx.fillStyle = "black";
+      ctx.fillRect(-dobj[8]/2, -dobj[9]/2, dobj[8], dobj[9])
+    }
+  }
+}
+
+function getWalls(data) {
+  var wallvals = [];
   var locplayer = data.player[id];
   var locwalls = walls[locplayer.mapId];
 
@@ -93,38 +146,31 @@ function drawWalls(data) {
       if(locwalls[i][j][0][0]!=0) {
         if(locplayer.angle>180) wlind = 0;
         else wlind = 1;
-        //draw
+        //add vert wall (3)
+        
+
+
       }
       if(locwalls[i][j][1][0]!=0) {
         if(locplayer.angle>90 && locplayer.angle<270) wlind = 0;
         else wlind = 1;
-        //draw
+        //add horz wall (3)
       }
     }
   }
-  /*var locplayer = data.player[id];
-  var locmap = map[locplayer.mapId];
+  return wallvals;
+}
 
-  var lw = size.width/15;
-  var lh = 2*lw;
-  
-  var radian = (360-locplayer.angle) / 180 * Math.PI;
-  var xdif = locplayer.x-5;
-  var ydif = locplayer.y-0;
-  var phase = (360-Math.atan(ydif/xdif)) / 180 * Math.PI;;
-  
-  var sin = Math.sin(radian);
-  var cos = Math.cos(radian);
-  ctx.setTransform(
-    cos, 
-    sin*(1-locplayer.alt), 
-    0, 
-    cos * locplayer.alt,
-    (size.width/2)+50*Math.sqrt(xdif**2+ydif**2)*Math.cos(radian+phase),
-    (size.height/2)+50*Math.sqrt(xdif**2+ydif**2)*Math.sin(radian+phase)
-  );  
-  
-  ctx.drawImage(wall1img, -lw/2, -lh/2, lw, lh);*/
+function getObjects(data) {
+  return [];
+}
+
+function getPlayer(data) {
+  var pllocs = [];
+  for(var i=0; i<data.player.length; i++) {
+    if(data.player[i].id == id) continue;
+    //add player
+  }
 }
 
 function degs_to_rads (degs) { return degs / (180/Math.PI); }
