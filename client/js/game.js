@@ -9,13 +9,24 @@ var size = {
 }
 
 var ratio = .7;
-var map = [[
-  [0,0,0,0,0,1],
-  [0,0,0,1,0,1],
-  [0,0,0,1,0,1],
-  [1,0,1,1,0,0],
-  [1,0,0,0,0,0],
-  [1,1,1,0,0,0],  
+
+var floor = [[
+	[0,0,0,0,0,0],
+	[0,1,0,0,0,0],
+	[0,0,0,0,0,0],
+	[0,0,0,0,0,0],
+	[0,0,0,0,0,0],
+	[0,0,0,0,0,0],  
+  ]];
+
+var walls = [[
+  [[[1, 1], [1, 1]], [[0, 0], [1, 1]], [[0, 0], [1, 1]], [[0, 0], [1, 1]], [[0, 0], [1, 1]], [[0, 0], [1, 1]], [[1, 1], [0, 0]]],
+  [[[1, 1], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[1, 1], [0, 0]]],
+  [[[1, 1], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[1, 1], [0, 0]]],
+  [[[1, 1], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[1, 1], [0, 0]]],
+  [[[1, 1], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[1, 1], [0, 0]]],
+  [[[1, 1], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[1, 1], [0, 0]]],
+  [[[0, 0], [1, 1]], [[0, 0], [1, 1]], [[0, 0], [1, 1]], [[0, 0], [1, 1]], [[0, 0], [1, 1]], [[0, 0], [1, 1]], [[0, 0], [0, 0]]]
 ]];
 
 var player1img = document.getElementById("player1");
@@ -38,7 +49,7 @@ socket.on('newPositions', function(data){
   ctx.imageSmoothingEnabled = false;
 
   drawfloor(data);
-  drawWalls(data);
+  //drawWalls(data);
   
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.drawImage(player1img,size.width/2-size.width/80,size.height/2-size.width/12, size.width/40, size.width/12);
@@ -46,10 +57,10 @@ socket.on('newPositions', function(data){
 
 function drawfloor(data) {
   var locplayer = data.player[id];
-  var locmap = map[locplayer.mapId];
+  var locfloor = floor[locplayer.mapId];
 
   var lw = size.width/15;
-  var radian = (360-locplayer.angle) / 180 * Math.PI;
+  var radian = (locplayer.angle) / 180 * Math.PI;
   var sin = Math.sin(radian);
   var cos = Math.cos(radian);
 
@@ -62,9 +73,9 @@ function drawfloor(data) {
     size.height/2,
   );
 
-  for(var i=0; i<locmap.length; i++) {
-    for(var j=0; j<locmap[i].length; j++) {
-      if(locmap[i][j]!=0) continue;
+  for(var i=0; i<locfloor.length; i++) {
+    for(var j=0; j<locfloor[i].length; j++) {
+      if(locfloor[i][j]!=0) continue;
       var xdif = locplayer.x-j;
       var ydif = locplayer.y-i;
       ctx.drawImage(floor1img, -xdif*lw, -ydif*lw, lw+2, lw+1);
@@ -74,6 +85,24 @@ function drawfloor(data) {
 
 function drawWalls(data) {
   var locplayer = data.player[id];
+  var locwalls = walls[locplayer.mapId];
+
+  for(var i=0; i<locwalls.length; i++) {
+    for(var j=0; j<locwalls[i].length; j++) {
+      var wlind;
+      if(locwalls[i][j][0][0]!=0) {
+        if(locplayer.angle>180) wlind = 0;
+        else wlind = 1;
+        //draw
+      }
+      if(locwalls[i][j][1][0]!=0) {
+        if(locplayer.angle>90 && locplayer.angle<270) wlind = 0;
+        else wlind = 1;
+        //draw
+      }
+    }
+  }
+  /*var locplayer = data.player[id];
   var locmap = map[locplayer.mapId];
 
   var lw = size.width/15;
@@ -93,11 +122,9 @@ function drawWalls(data) {
     cos * locplayer.alt,
     (size.width/2)+50*Math.sqrt(xdif**2+ydif**2)*Math.cos(radian+phase),
     (size.height/2)+50*Math.sqrt(xdif**2+ydif**2)*Math.sin(radian+phase)
-  );
+  );  
   
-  
-  
-  ctx.drawImage(wall1img, -lw/2, -lh/2, lw, lh);
+  ctx.drawImage(wall1img, -lw/2, -lh/2, lw, lh);*/
 }
 
 function degs_to_rads (degs) { return degs / (180/Math.PI); }
