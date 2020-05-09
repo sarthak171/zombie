@@ -31,15 +31,17 @@ var walls = [[
 
 var player1img = document.getElementById("player1");
 var wall1img = document.getElementById("wall1");
+var wall2img = document.getElementById("wall2");
 var floor1img = document.getElementById("floor1");
 
 document.getElementById("player1").style.display = "none";
 document.getElementById("wall1").style.display = "none";
+document.getElementById("wall2").style.display = "none";
 document.getElementById("floor1").style.display = "none";
 
 var playerimgs = [player1img];
 var floorimgs = [floor1img];
-var wallimgs = [null, wall1img];
+var wallimgs = [null, wall1img, wall2img];
 
 
 
@@ -56,8 +58,6 @@ socket.on('newPositions', function(data){
   drawfloor(data);
   drawObj(data);
   
-  //ctx.setTransform(1, 0, 0, 1, 0, 0);
-  //ctx.drawImage(playerimgs[data.player[id].imgId],size.width/2-size.width/80,size.height/2-size.width/12, size.width/40, size.width/12);
 });
 
 function drawfloor(data) {
@@ -142,7 +142,7 @@ function getWalls(data) {
   var lw = size.width/15;
 
   var wlind;
-  var dx, dy, tr;
+  var dx, dy, shift, tr, trd;
   var radianl, sinl, cosl;
   for(var i=0; i<locwalls.length; i++) {
     for(var j=0; j<locwalls[i].length; j++) {
@@ -152,8 +152,10 @@ function getWalls(data) {
         else wlind = 1;
 
         dx = j-locplayer.x;
-				dy = i+.5-locplayer.y;
+        dy = i+.5-locplayer.y;
+        shift = (1-2*wlind)/8;
         tr = getTransition(dx, dy, locplayer.angle, locplayer.alt, lw);
+        trd = getTransition(dx-shift, dy, locplayer.angle, locplayer.alt, lw);
         
         radianl = (locplayer.angle+90) / 180 * Math.PI;
         sinl = Math.sin(radianl);
@@ -168,7 +170,7 @@ function getWalls(data) {
           tr[0],
           tr[1]-locplayer.alt*lw,
           lw, lw*2, 
-          'w', 1
+          'w', locwalls[i][j][0][wlind]
         ]);
       }
       
@@ -179,7 +181,9 @@ function getWalls(data) {
         
         dx = j+0.5-locplayer.x;
         dy = i-locplayer.y;
+        shift = (1-2*wlind)/8;
         tr = getTransition(dx, dy, locplayer.angle, locplayer.alt, lw);
+        trd = getTransition(dx, dy-shift, locplayer.angle, locplayer.alt, lw);
         
         radianl = (locplayer.angle) / 180 * Math.PI;
         sinl = Math.sin(radianl);
@@ -194,7 +198,7 @@ function getWalls(data) {
           tr[0],
           tr[1]-locplayer.alt*lw,
           lw, lw*2, 
-          'w', 1
+          'w', locwalls[i][j][1][wlind]
         ]);
       }
     }
@@ -226,11 +230,6 @@ function getPlayers(data) {
       'p', 0
     ]);
   }
-  /*pllocs.push([size.width/2, size.height/2, 
-    1, 0, 0, 1, size.width/2-size.width/80,size.height/2-size.width/24, 
-    size.width/40, size.width/12, 
-    'p', 0
-  ]);*/
   return pllocs;
 }
 
