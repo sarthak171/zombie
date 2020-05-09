@@ -20,13 +20,13 @@ var floor = [[
   ]];
 
 var walls = [[
-  [[[1, 1], [1, 1]], [[0, 0], [1, 1]], [[0, 0], [1, 1]], [[0, 0], [1, 1]], [[0, 0], [1, 1]], [[0, 0], [1, 1]], [[1, 1], [0, 0]]],
-  [[[1, 1], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[1, 1], [0, 0]]],
-  [[[1, 1], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[1, 1], [0, 0]]],
-  [[[1, 1], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[1, 1], [0, 0]]],
-  [[[1, 1], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[1, 1], [0, 0]]],
-  [[[1, 1], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[1, 1], [0, 0]]],
-  [[[0, 0], [1, 1]], [[0, 0], [1, 1]], [[0, 0], [1, 1]], [[0, 0], [1, 1]], [[0, 0], [1, 1]], [[0, 0], [1, 1]], [[0, 0], [0, 0]]]
+  [[[2, 1], [2, 1]], [[0, 0], [2, 1]], [[0, 0], [2, 1]], [[0, 0], [2, 1]], [[0, 0], [2, 1]], [[0, 0], [2, 1]], [[1, 2], [0, 0]]],
+  [[[2, 1], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[1, 2], [0, 0]]],
+  [[[2, 1], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[1, 2], [0, 0]]],
+  [[[2, 1], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[1, 2], [0, 0]]],
+  [[[2, 1], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[1, 2], [0, 0]]],
+  [[[2, 1], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[1, 2], [0, 0]]],
+  [[[0, 0], [1, 2]], [[0, 0], [1, 2]], [[0, 0], [1, 2]], [[0, 0], [1, 2]], [[0, 0], [1, 2]], [[0, 0], [1, 2]], [[0, 0], [0, 0]]]
 ]];
 
 var player1img = document.getElementById("player1");
@@ -39,7 +39,7 @@ document.getElementById("floor1").style.display = "none";
 
 var playerimgs = [player1img];
 var floorimgs = [floor1img];
-var wallimgs = [wall1img];
+var wallimgs = [null, wall1img];
 
 
 
@@ -54,10 +54,10 @@ socket.on('newPositions', function(data){
   ctx.imageSmoothingEnabled = false;
 
   drawfloor(data);
-  //drawObj(data);
+  drawObj(data);
   
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
-  ctx.drawImage(playerimgs[data.player[id].imgId],size.width/2-size.width/80,size.height/2-size.width/12, size.width/40, size.width/12);
+  //ctx.setTransform(1, 0, 0, 1, 0, 0);
+  //ctx.drawImage(playerimgs[data.player[id].imgId],size.width/2-size.width/80,size.height/2-size.width/12, size.width/40, size.width/12);
 });
 
 function drawfloor(data) {
@@ -91,7 +91,7 @@ function drawfloor(data) {
 function drawObj(data) {
   var objvals = [];
   Array.prototype.push.apply(objvals, getWalls(data));
-  Array.prototype.push.apply(objvals, getObjects(data));
+  //Array.prototype.push.apply(objvals, getObjects(data));
   Array.prototype.push.apply(objvals, getPlayers(data));
 
   var objinds = [];
@@ -99,25 +99,25 @@ function drawObj(data) {
     objinds.push(i);
   }
 
-  objinds.sort(function(a, b){return objvals[b][1] - objvals[a][1]});
+  objinds.sort(function(a, b){return objvals[a][1] - objvals[b][1]});
 
   for(var i=0; i<objinds.length; i++) {
     //[sx, sy, t1, t2, t3, t4, t5, t6, w, h, type, img]
-    var dobj = objinds[i];
+    var dobj = objvals[objinds[i]];
     
     ctx.setTransform(
-      dobj[i][2], 
-      dobj[i][3], 
-      dobj[i][4], 
-      dobj[i][5], 
-      dobj[i][6], 
-      dobj[i][7], 
+      dobj[2], 
+      dobj[3], 
+      dobj[4], 
+      dobj[5], 
+      dobj[6], 
+      dobj[7], 
     );
     
     var dimg;
     var isImg = true;
     
-    switch(dobj[i][10]) {
+    switch(dobj[10]) {
       case 'p': dimg = playerimgs[dobj[11]];
         break;
       case 'w': dimg = wallimgs[dobj[11]];
@@ -127,10 +127,10 @@ function drawObj(data) {
     }
 
     if(isImg) {
-      ctx.drawImage(dimg, -dobj[8]/2, -dobj[9]/2, dobj[8], dobj[9]);
+      ctx.drawImage(dimg, -dobj[8]/2, -dobj[9]/2, dobj[8]+2, dobj[9]+2);
     } else {
       ctx.fillStyle = "black";
-      ctx.fillRect(-dobj[8]/2, -dobj[9]/2, dobj[8], dobj[9])
+      ctx.fillRect(-dobj[8]/2, -dobj[9]/2, dobj[8]+2, dobj[9]+2)
     }
   }
 }
@@ -139,22 +139,63 @@ function getWalls(data) {
   var wallvals = [];
   var locplayer = data.player[id];
   var locwalls = walls[locplayer.mapId];
+  var lw = size.width/15;
 
+  var wlind;
+  var dx, dy, tr;
+  var radianl, sinl, cosl;
   for(var i=0; i<locwalls.length; i++) {
     for(var j=0; j<locwalls[i].length; j++) {
-      var wlind;
+      //vert
       if(locwalls[i][j][0][0]!=0) {
         if(locplayer.angle>180) wlind = 0;
         else wlind = 1;
-        //add vert wall (3)
+
+        dx = j-locplayer.x;
+				dy = i+.5-locplayer.y;
+        tr = getTransition(dx, dy, locplayer.angle, locplayer.alt, lw);
         
+        radianl = (locplayer.angle+90) / 180 * Math.PI;
+        sinl = Math.sin(radianl);
+        cosl = Math.cos(radianl);
 
-
+        wallvals.push([
+          tr[0], tr[1],
+          cosl, 
+          sinl*(1-locplayer.alt), 
+          0, 
+          locplayer.alt,
+          tr[0],
+          tr[1]-locplayer.alt*lw,
+          lw, lw*2, 
+          'w', 1
+        ]);
       }
+      
+      //add horz wall
       if(locwalls[i][j][1][0]!=0) {
         if(locplayer.angle>90 && locplayer.angle<270) wlind = 0;
         else wlind = 1;
-        //add horz wall (3)
+        
+        dx = j+0.5-locplayer.x;
+        dy = i-locplayer.y;
+        tr = getTransition(dx, dy, locplayer.angle, locplayer.alt, lw);
+        
+        radianl = (locplayer.angle) / 180 * Math.PI;
+        sinl = Math.sin(radianl);
+        cosl = Math.cos(radianl);
+
+        wallvals.push([
+          tr[0], tr[1],
+          cosl, 
+          sinl*(1-locplayer.alt), 
+          0, 
+          locplayer.alt,
+          tr[0],
+          tr[1]-locplayer.alt*lw,
+          lw, lw*2, 
+          'w', 1
+        ]);
       }
     }
   }
@@ -165,12 +206,40 @@ function getObjects(data) {
   return [];
 }
 
-function getPlayer(data) {
+function getPlayers(data) {
+  var locplayer = data.player[id];
   var pllocs = [];
-  for(var i=0; i<data.player.length; i++) {
-    if(data.player[i].id == id) continue;
+  var dx, dy, tr;
+  var tplayer;
+  var lw = size.width/15;
+  for(var i in data.player) {
     //add player
+    tplayer = data.player[i];
+    dx = tplayer.x-locplayer.x;
+    dy = tplayer.y-locplayer.y;
+    tr = getTransition(dx, dy, locplayer.angle, locplayer.alt, lw);
+
+    pllocs.push([
+      tr[0], tr[1], 
+      1, 0, 0, 1, tr[0]-lw*0.15, tr[1]-lw*.5, 
+      lw*0.3, lw,
+      'p', 0
+    ]);
   }
+  /*pllocs.push([size.width/2, size.height/2, 
+    1, 0, 0, 1, size.width/2-size.width/80,size.height/2-size.width/24, 
+    size.width/40, size.width/12, 
+    'p', 0
+  ]);*/
+  return pllocs;
+}
+
+function getTransition(dx, dy, angle, alt, lw) {
+  var dist = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy,  2));
+	var tang = (Math.atan2(dy, dx)+angle*Math.PI/180)%(2*Math.PI);
+	var xc = size.width/2+Math.cos(tang)*dist*lw;
+  var yc = size.height/2+Math.sin(tang)*dist*lw*(1-alt);
+  return [xc, yc];
 }
 
 function degs_to_rads (degs) { return degs / (180/Math.PI); }
@@ -238,4 +307,11 @@ document.onmouseup = function(event) {
     x:(event.clientX-size.width/2),
     y:(event.clientY-size.height/2),
   });
+}
+
+function multiplyPoint(px, py, mat) {
+  return {
+    x: px * mat[0][0] + py * mat[0][1] + mat[0][2],
+    y: px * mat[1][0] + py * mat[1][1] + mat[1][2]
+  }
 }
