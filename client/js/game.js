@@ -20,14 +20,16 @@ var floor = [[
   ]];
 
 var walls = [[
-  [[[2, 1], [2, 1]], [[0, 0], [2, 1]], [[0, 0], [2, 1]], [[0, 0], [2, 1]], [[0, 0], [2, 1]], [[0, 0], [2, 1]], [[1, 2], [0, 0]]],
+  [[[2, 1], [2, 1]], [[0, 0], [2, 1]], [[0, 0], [0, 0]], [[0, 0], [2, 1]], [[0, 0], [2, 1]], [[0, 0], [2, 1]], [[1, 2], [0, 0]]],
   [[[2, 1], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[1, 2], [0, 0]]],
+  [[[2, 1], [1, 1]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]]],
+  [[[2, 1], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [1, 1]], [[1, 2], [0, 0]]],
+  [[[2, 1], [1, 1]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[1, 2], [0, 0]]],
   [[[2, 1], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[1, 2], [0, 0]]],
-  [[[2, 1], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[1, 2], [0, 0]]],
-  [[[2, 1], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[1, 2], [0, 0]]],
-  [[[2, 1], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[1, 2], [0, 0]]],
-  [[[0, 0], [1, 2]], [[0, 0], [1, 2]], [[0, 0], [1, 2]], [[0, 0], [1, 2]], [[0, 0], [1, 2]], [[0, 0], [1, 2]], [[0, 0], [0, 0]]]
+  [[[0, 0], [1, 2]], [[0, 0], [1, 2]], [[0, 0], [1, 2]], [[0, 0], [0, 0]], [[0, 0], [1, 2]], [[0, 0], [1, 2]], [[0, 0], [0, 0]]]
 ]];
+
+var wth = 0.25;
 
 var player1img = document.getElementById("player1");
 var wall1img = document.getElementById("wall1");
@@ -83,7 +85,7 @@ function drawfloor(data) {
       if(locfloor[i][j]!=0) continue;
       var xdif = locplayer.x-j;
       var ydif = locplayer.y-i;
-      ctx.drawImage(floor1img, -xdif*lw, -ydif*lw, lw+2, lw+1);
+      ctx.drawImage(floor1img, -xdif*lw, -ydif*lw, lw+2, lw+2);
     }
   }
 }
@@ -100,37 +102,33 @@ function drawObj(data) {
   }
 
   objinds.sort(function(a, b){return objvals[a][1] - objvals[b][1]});
+  console.log(objinds.length);
 
   for(var i=0; i<objinds.length; i++) {
-    //[sx, sy, t1, t2, t3, t4, t5, t6, w, h, type, img]
+    //[sx, sy, t1, t2, t3, t4, t5, t6, start%, end%, w, h, type, img]
     var dobj = objvals[objinds[i]];
-    
-    ctx.setTransform(
-      dobj[2], 
-      dobj[3], 
-      dobj[4], 
-      dobj[5], 
-      dobj[6], 
-      dobj[7], 
-    );
-    
+    ctx.setTransform(dobj[2], dobj[3], dobj[4], dobj[5], dobj[6], dobj[7]);    
     var dimg;
     var isImg = true;
     
-    switch(dobj[10]) {
-      case 'p': dimg = playerimgs[dobj[11]];
+    switch(dobj[12]) {
+      case 'p': dimg = playerimgs[dobj[13]];
         break;
-      case 'w': dimg = wallimgs[dobj[11]];
+      case 'w': dimg = wallimgs[dobj[13]];
         break;
       default: isImg = false;
         break;
     }
 
     if(isImg) {
-      ctx.drawImage(dimg, -dobj[8]/2, -dobj[9]/2, dobj[8]+2, dobj[9]+2);
+      ctx.drawImage(
+        dimg, 
+        dobj[8]*dimg.width, 0, (dobj[9]-dobj[8])*dimg.width, dimg.height, 
+        -dobj[10]/2, -dobj[11]/2, dobj[10]+2, dobj[11]+2
+      );
     } else {
       ctx.fillStyle = "black";
-      ctx.fillRect(-dobj[8]/2, -dobj[9]/2, dobj[8]+2, dobj[9]+2)
+      ctx.fillRect(-dobj[10]/2, -dobj[11]/2, dobj[10]+2, dobj[11]+2)
     }
   }
 }
@@ -141,65 +139,112 @@ function getWalls(data) {
   var locwalls = walls[locplayer.mapId];
   var lw = size.width/15;
 
-  var wlind;
-  var dx, dy, shift, tr, trd;
-  var radianl, sinl, cosl;
+  var wlind1 = (locplayer.angle>180) ? 0 : 1;
+  var wlind2 = (locplayer.angle>90 && locplayer.angle<270) ? 0 : 1;
+  var modloc = (locplayer.angle%180)/90;
+  
+  var shift1 = (1-2*wlind1);
+  var shift2 = (1-2*wlind2);
+
+  var radian1 = (locplayer.angle+90) / 180 * Math.PI;
+  var sin1 = Math.sin(radian1);
+  var cos1 = Math.cos(radian1);
+
+  var radian2 = (locplayer.angle) / 180 * Math.PI;
+  var sin2 = Math.sin(radian2);
+  var cos2 = Math.cos(radian2);
+
+  var dx, dy, xs, ys, tr, trd, per;
   for(var i=0; i<locwalls.length; i++) {
     for(var j=0; j<locwalls[i].length; j++) {
+      
       //vert
       if(locwalls[i][j][0][0]!=0) {
-        if(locplayer.angle>180) wlind = 0;
-        else wlind = 1;
-
         dx = j-locplayer.x;
         dy = i+.5-locplayer.y;
-        shift = (1-2*wlind)/8;
+        var ys = [dy-0.5, dy+0.5];
         tr = getTransition(dx, dy, locplayer.angle, locplayer.alt, lw);
-        trd = getTransition(dx-shift, dy, locplayer.angle, locplayer.alt, lw);
         
-        radianl = (locplayer.angle+90) / 180 * Math.PI;
-        sinl = Math.sin(radianl);
-        cosl = Math.cos(radianl);
+        if(locwalls[i][j+wlind1-1]!=null && locwalls[i][j+wlind1-1][1][0]!=0) ys[0]+=wth/2;
+        else if(locwalls[i-1]==null || locwalls[i-1][j][0][0]==0) ys[0]-=wth/2;
+        
+        if(locwalls[i+1]!=null && locwalls[i+1][j+wlind1-1]!=null && locwalls[i+1][j+wlind1-1][1][0]!=0) ys[1]-=wth/2;
+        else if(locwalls[i+1]==null || locwalls[i+1][j][0][0]==0) ys[1]+=wth/2;
 
+        per = [Math.max(dy-0.5, ys[0])-(dy-0.5),Math.min(dy+0.5, ys[1])-(dy-0.5)];
+        if(ys[1]-ys[0]<1) per = [ys[0]-(dy-0.5), ys[1]-(dy-0.5)];
+
+        trd = getTransition(dx-shift1*wth/2, (Math.min(dy+0.5, ys[1])+Math.max(dy-0.5, ys[0]))/2, locplayer.angle, locplayer.alt, lw);
         wallvals.push([
           tr[0], tr[1],
-          cosl, 
-          sinl*(1-locplayer.alt), 
-          0, 
-          locplayer.alt,
-          tr[0],
-          tr[1]-locplayer.alt*lw,
-          lw, lw*2, 
-          'w', locwalls[i][j][0][wlind]
+          cos1, sin1*(1-locplayer.alt), 0, locplayer.alt, trd[0], trd[1]-locplayer.alt*lw,
+          per[0], per[1], lw*(Math.min(dy+0.5, ys[1])-Math.max(dy-0.5, ys[0])), lw*2, 'w', locwalls[i][j][0][wlind1]
         ]);
+
+        if(ys[0]<dy-0.5) {
+          per = [1-(dy-0.5-ys[0]), 1];
+          trd = getTransition(dx-shift1*wth/2, (dy-0.5+ys[0])/2, locplayer.angle, locplayer.alt, lw);
+          wallvals.push([
+            tr[0], tr[1],
+            cos1, sin1*(1-locplayer.alt), 0, locplayer.alt, trd[0], trd[1]-locplayer.alt*lw,
+            per[0], per[1], lw*(dy-0.5-ys[0]), lw*2, 'w', locwalls[i][j][0][wlind1]
+          ]);
+        }
+
+        if(ys[1]>dy+0.5) {
+          per = [0, ys[1]-(dy+0.5)];
+          trd = getTransition(dx-shift1*wth/2, (dy+0.5+ys[1])/2, locplayer.angle, locplayer.alt, lw);
+          wallvals.push([
+            tr[0], tr[1],
+            cos1, sin1*(1-locplayer.alt), 0, locplayer.alt, trd[0], trd[1]-locplayer.alt*lw,
+            per[0], per[1], lw*(ys[1]-(dy+0.5)), lw*2, 'w', locwalls[i][j][0][wlind1]
+          ]);
+        }
       }
       
-      //add horz wall
+      //horz
       if(locwalls[i][j][1][0]!=0) {
-        if(locplayer.angle>90 && locplayer.angle<270) wlind = 0;
-        else wlind = 1;
-        
         dx = j+0.5-locplayer.x;
         dy = i-locplayer.y;
-        shift = (1-2*wlind)/8;
+        xs = [dx-0.5, dx+0.5];
         tr = getTransition(dx, dy, locplayer.angle, locplayer.alt, lw);
-        trd = getTransition(dx, dy-shift, locplayer.angle, locplayer.alt, lw);
-        
-        radianl = (locplayer.angle) / 180 * Math.PI;
-        sinl = Math.sin(radianl);
-        cosl = Math.cos(radianl);
 
+        if(locwalls[i+wlind2-1]!=null && locwalls[i+wlind2-1][j][0][0]!=0) xs[0]+=wth/2;
+        else if(locwalls[i][j-1]==null || locwalls[i][j-1][1][0]==0) xs[0]-=wth/2;
+        
+        if(locwalls[i+wlind2-1]!=null && locwalls[i+wlind2-1][j+1]!=null && locwalls[i+wlind2-1][j+1][0][0]!=0) xs[1]-=wth/2;
+        else if(locwalls[i][j+1]==null || locwalls[i][j+1][1][0]==0) xs[1]+=wth/2;
+
+        trd = getTransition((Math.min(dx+0.5, xs[1])+Math.max(dx-0.5, xs[0]))/2, dy-shift2*wth/2, locplayer.angle, locplayer.alt, lw);
+
+        per = [Math.max(dx-0.5, xs[0])-(dx-0.5),Math.min(dx+0.5, xs[1])-(dx-0.5)];
+        if(xs[1]-xs[0]<1) per = [xs[0]-(dx-0.5), xs[1]-(dx-0.5)];
+        
         wallvals.push([
           tr[0], tr[1],
-          cosl, 
-          sinl*(1-locplayer.alt), 
-          0, 
-          locplayer.alt,
-          tr[0],
-          tr[1]-locplayer.alt*lw,
-          lw, lw*2, 
-          'w', locwalls[i][j][1][wlind]
+          cos2, sin2*(1-locplayer.alt), 0, locplayer.alt, trd[0], trd[1]-locplayer.alt*lw, 
+          per[0], per[1], lw*(Math.min(dx+0.5, xs[1])-Math.max(dx-0.5, xs[0])), lw*2, 'w', locwalls[i][j][1][wlind2]
         ]);
+
+        if(xs[0]<dx-0.5) {
+          per = [1-(dx-0.5-xs[0]), 1];
+          trd = getTransition((dx-0.5+xs[0])/2, dy-shift2*wth/2, locplayer.angle, locplayer.alt, lw);
+          wallvals.push([
+            tr[0], tr[1],
+            cos2, sin2*(1-locplayer.alt), 0, locplayer.alt, trd[0], trd[1]-locplayer.alt*lw, 
+            per[0], per[1], lw*(dx-0.5-xs[0]), lw*2, 'w', locwalls[i][j][1][wlind2]
+          ]);
+        }
+
+        if(xs[1]>dx+0.5) {
+          per = [0, xs[1]-(dx+0.5)];
+          trd = getTransition((dx+0.5+xs[1])/2, dy-shift2*wth/2, locplayer.angle, locplayer.alt, lw);
+          wallvals.push([
+            tr[0], tr[1],
+            cos2, sin2*(1-locplayer.alt), 0, locplayer.alt, trd[0], trd[1]-locplayer.alt*lw, 
+            per[0], per[1], lw*(xs[1]-(dx+0.5)), lw*2, 'w', locwalls[i][j][1][wlind2]
+          ]);
+        }
       }
     }
   }
@@ -226,8 +271,7 @@ function getPlayers(data) {
     pllocs.push([
       tr[0], tr[1], 
       1, 0, 0, 1, tr[0]-lw*0.15, tr[1]-lw*.5, 
-      lw*0.3, lw,
-      'p', 0
+      0, 1, lw*0.3, lw, 'p', 0
     ]);
   }
   return pllocs;
