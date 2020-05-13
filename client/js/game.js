@@ -102,7 +102,6 @@ function drawObj(data) {
   }
 
   objinds.sort(function(a, b){return objvals[a][1] - objvals[b][1]});
-  console.log(objinds.length);
 
   for(var i=0; i<objinds.length; i++) {
     //[sx, sy, t1, t2, t3, t4, t5, t6, start%, end%, w, h, type, img]
@@ -200,6 +199,13 @@ function getWalls(data) {
             per[0], per[1], lw*(ys[1]-(dy+0.5)), lw*2, 'w', locwalls[i][j][0][wlind1]
           ]);
         }
+
+        trd = getTransition(dx, dy, locplayer.angle, locplayer.alt, lw);
+        wallvals.push([
+          tr[0], tr[1],
+          cos1, sin1*(1-locplayer.alt), -sin1, cos1 * (1-locplayer.alt), trd[0], trd[1]-(locplayer.alt)*lw*2,
+          null, null, lw*(1+wth), wth*lw, 'wt', null
+        ]);
       }
       
       //horz
@@ -245,6 +251,13 @@ function getWalls(data) {
             per[0], per[1], lw*(xs[1]-(dx+0.5)), lw*2, 'w', locwalls[i][j][1][wlind2]
           ]);
         }
+
+        trd = getTransition(dx, dy, locplayer.angle, locplayer.alt, lw);
+        wallvals.push([
+          tr[0], tr[1],
+          cos1, sin1*(1-locplayer.alt), -sin1, cos1 * (1-locplayer.alt), trd[0], trd[1]-(locplayer.alt)*lw*2,
+          null, null, wth*lw, lw*(1+wth), 'wt', null
+        ]);
       }
     }
   }
