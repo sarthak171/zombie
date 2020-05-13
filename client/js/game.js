@@ -206,6 +206,17 @@ function getWalls(data) {
           cos1, sin1*(1-locplayer.alt), -sin1, cos1 * (1-locplayer.alt), trd[0], trd[1]-(locplayer.alt)*lw*2,
           null, null, lw*(1+wth), wth*lw, 'wt', null
         ]);
+
+        if(ys[wlind2]>dy+0.5 || ys[wlind2]<dy-0.5) {
+          if(locwalls[i+wlind2]==null || locwalls[i+wlind2][j-wlind1]==null || locwalls[i+wlind2][j-wlind1][1][0]==0) {
+            trd = getTransition(dx, ys[wlind2], locplayer.angle, locplayer.alt, lw);
+            wallvals.push([
+              tr[0], tr[1],
+              cos2, sin2*(1-locplayer.alt), 0, locplayer.alt, trd[0], trd[1]-locplayer.alt*lw, 
+              null, null, lw*wth, lw*2, 'ws', null
+            ]);
+          }
+        }
       }
       
       //horz
@@ -258,6 +269,17 @@ function getWalls(data) {
           cos1, sin1*(1-locplayer.alt), -sin1, cos1 * (1-locplayer.alt), trd[0], trd[1]-(locplayer.alt)*lw*2,
           null, null, wth*lw, lw*(1+wth), 'wt', null
         ]);
+
+        if(xs[wlind1]>dx+0.5 || xs[wlind1]<dx-0.5) {
+          if(locwalls[i-wlind2]==null || locwalls[i-wlind2][j+wlind1]==null || locwalls[i-wlind2][j+wlind1][0][0]==0) {
+            trd = getTransition(xs[wlind1], dy, locplayer.angle, locplayer.alt, lw);
+            wallvals.push([
+              tr[0], tr[1],
+              cos1, sin1*(1-locplayer.alt), 0, locplayer.alt, trd[0], trd[1]-locplayer.alt*lw,
+              null, null, lw*wth, lw*2, 'ws', null
+            ]);
+          }
+        }
       }
     }
   }
