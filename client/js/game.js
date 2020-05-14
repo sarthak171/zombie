@@ -168,7 +168,7 @@ function getWalls(data) {
       if(locwalls[i][j][0][0]!=0) {
         dx = j-locplayer.x;
         dy = i+.5-locplayer.y;
-        var ys = [dy-0.5, dy+0.5];
+        var ys = [-0.5, 0.5];
         tr = getTransition(dx, dy, locplayer.angle, locplayer.alt, lw);
         
         if(locwalls[i][j+wlind1-1]!=null && locwalls[i][j+wlind1-1][1][0]!=0) ys[0]+=wth/2;
@@ -179,37 +179,36 @@ function getWalls(data) {
         //else if(locwalls[i+1]!=null && locwalls[i+1][j-wlind1]!=null && locwalls[i+1][j-wlind1][1][0]!=0) ys[1]+=wth/2;
         else if(locwalls[i+1]==null || locwalls[i+1][j][0][0]==0) ys[1]+=wth/2;
 
-        per = [Math.max(dy-0.5, ys[0])-(dy-0.5),Math.min(dy+0.5, ys[1])-(dy-0.5)];
-        if(ys[1]-ys[0]<1) per = [ys[0]-(dy-0.5), ys[1]-(dy-0.5)];
-
-        trd = getTransition(dx-shift1*wth/2, (Math.min(dy+0.5, ys[1])+Math.max(dy-0.5, ys[0]))/2, locplayer.angle, locplayer.alt, lw);
+        per = [Math.max(0, ys[0]+0.5), Math.min(1, ys[1]+0.5)];
+        trd = getTransition(dx-shift1*wth/2, (2*(dy-0.5)+per[0]+per[1])/2, locplayer.angle, locplayer.alt, lw);
+        
         wallvals.push([
           tr[0], tr[1],
           cos1, sin1*(1-locplayer.alt), 0, locplayer.alt, trd[0], trd[1]-locplayer.alt*lw,
-          per[0], per[1], lw*(Math.min(dy+0.5, ys[1])-Math.max(dy-0.5, ys[0])), lw*2, 'w', locwalls[i][j][0][wlind1]
+          per[0], per[1], lw*(per[1]-per[0]), lw*2, 'w', locwalls[i][j][0][wlind1]
         ]);
 
-        if(ys[0]<dy-0.5) {
-          per = [1-(dy-0.5-ys[0]), 1];
-          trd = getTransition(dx-shift1*wth/2, (dy-0.5+ys[0])/2, locplayer.angle, locplayer.alt, lw);
+        if(ys[0]<-0.5) {
+          per = [1+(ys[0]+0.5), 1];
+          trd = getTransition(dx-shift1*wth/2, (2*dy-0.5+ys[0])/2, locplayer.angle, locplayer.alt, lw);
           wallvals.push([
             tr[0], tr[1],
             cos1, sin1*(1-locplayer.alt), 0, locplayer.alt, trd[0], trd[1]-locplayer.alt*lw,
-            per[0], per[1], lw*(dy-0.5-ys[0]), lw*2, 'w', locwalls[i][j][0][wlind1]
+            per[0], per[1], lw*(-0.5-ys[0]), lw*2, 'w', locwalls[i][j][0][wlind1]
           ]);
         }
 
-        if(ys[1]>dy+0.5) {
-          per = [0, ys[1]-(dy+0.5)];
-          trd = getTransition(dx-shift1*wth/2, (dy+0.5+ys[1])/2, locplayer.angle, locplayer.alt, lw);
+        if(ys[1]>0.5) {
+          per = [0, ys[1]-0.5];
+          trd = getTransition(dx-shift1*wth/2, (2*dy+0.5+ys[1])/2, locplayer.angle, locplayer.alt, lw);
           wallvals.push([
             tr[0], tr[1],
             cos1, sin1*(1-locplayer.alt), 0, locplayer.alt, trd[0], trd[1]-locplayer.alt*lw,
-            per[0], per[1], lw*(ys[1]-(dy+0.5)), lw*2, 'w', locwalls[i][j][0][wlind1]
+            per[0], per[1], lw*(ys[1]-0.5), lw*2, 'w', locwalls[i][j][0][wlind1]
           ]);
         }
 
-        var ystop = [dy-0.5-Math.abs(dy-0.5-ys[0]), dy+0.5+Math.abs(dy+0.5-ys[1])];
+        var ystop = [dy-0.5-Math.abs(-0.5-ys[0]), dy+0.5+Math.abs(0.5-ys[1])];
 
         trd = getTransition(dx, (ystop[1]+ystop[0])/2, locplayer.angle, locplayer.alt, lw);
         wallvals.push([
@@ -219,10 +218,10 @@ function getWalls(data) {
         ]);
 
         //if(ys[wlind2]==dy+0.5 || ys[wlind2]==dy-0.5) {
-        if(ys[wlind2]>dy+0.5 || ys[wlind2]<dy-0.5) {
+        if(ys[wlind2]>0.5 || ys[wlind2]<-0.5) {
           //if(locwalls[i+2*wlind2-1]==null || locwalls[i+2*wlind2-1][j][0][0]==0) {
           if(locwalls[i+wlind2]==null || locwalls[i+wlind2][j-wlind1]==null || locwalls[i+wlind2][j-wlind1][1][0]==0) {
-            trd = getTransition(dx, ys[wlind2], locplayer.angle, locplayer.alt, lw);
+            trd = getTransition(dx, dy+ys[wlind2], locplayer.angle, locplayer.alt, lw);
             wallvals.push([
               tr[0], tr[1],
               cos2, sin2*(1-locplayer.alt), 0, locplayer.alt, trd[0], trd[1]-locplayer.alt*lw, 
@@ -236,7 +235,7 @@ function getWalls(data) {
       if(locwalls[i][j][1][0]!=0) {
         dx = j+0.5-locplayer.x;
         dy = i-locplayer.y;
-        xs = [dx-0.5, dx+0.5];
+        xs = [-0.5, 0.5];
         tr = getTransition(dx, dy, locplayer.angle, locplayer.alt, lw);
 
         if(locwalls[i+wlind2-1]!=null && locwalls[i+wlind2-1][j][0][0]!=0) xs[0]+=wth/2;
@@ -247,39 +246,36 @@ function getWalls(data) {
         //else if(locwalls[i-wlind2]!=null && locwalls[i-wlind2][j+1]!=null && locwalls[i-wlind2][j+1][0][0]!=0) xs[1]+=wth/2;
         else if(locwalls[i][j+1]==null || locwalls[i][j+1][1][0]==0) xs[1]+=wth/2;
 
-        trd = getTransition((Math.min(dx+0.5, xs[1])+Math.max(dx-0.5, xs[0]))/2, dy-shift2*wth/2, locplayer.angle, locplayer.alt, lw);
+        per = [Math.max(0, xs[0]+0.5), Math.min(1, xs[1]+0.5)];
+        trd = getTransition((2*(dx-0.5)+per[0]+per[1])/2, dy-shift2*wth/2, locplayer.angle, locplayer.alt, lw);
 
-        per = [Math.max(dx-0.5, xs[0])-(dx-0.5),Math.min(dx+0.5, xs[1])-(dx-0.5)];
-        if(xs[1]-xs[0]<1) per = [xs[0]-(dx-0.5), xs[1]-(dx-0.5)];
-
-        trd = getTransition((Math.min(dx+0.5, xs[1])+Math.max(dx-0.5, xs[0]))/2, dy-shift2*wth/2, locplayer.angle, locplayer.alt, lw);
         wallvals.push([
           tr[0], tr[1],
           cos2, sin2*(1-locplayer.alt), 0, locplayer.alt, trd[0], trd[1]-locplayer.alt*lw, 
-          per[0], per[1], lw*(Math.min(dx+0.5, xs[1])-Math.max(dx-0.5, xs[0])), lw*2, 'w', locwalls[i][j][1][wlind2]
+          per[0], per[1], lw*(per[1]-per[0]), lw*2, 'w', locwalls[i][j][1][wlind2]
         ]);
 
-        if(xs[0]<dx-0.5) {
-          per = [1-(dx-0.5-xs[0]), 1];
-          trd = getTransition((dx-0.5+xs[0])/2, dy-shift2*wth/2, locplayer.angle, locplayer.alt, lw);
+        if(xs[0]<-0.5) {
+          per = [1+(xs[0]+0.5), 1];
+          trd = getTransition((2*dx-0.5+xs[0])/2, dy-shift2*wth/2, locplayer.angle, locplayer.alt, lw);
           wallvals.push([
             tr[0], tr[1],
             cos2, sin2*(1-locplayer.alt), 0, locplayer.alt, trd[0], trd[1]-locplayer.alt*lw, 
-            per[0], per[1], lw*(dx-0.5-xs[0]), lw*2, 'w', locwalls[i][j][1][wlind2]
+            per[0], per[1], lw*(-0.5-xs[0]), lw*2, 'w', locwalls[i][j][1][wlind2]
           ]);
         }
 
-        if(xs[1]>dx+0.5) {
-          per = [0, xs[1]-(dx+0.5)];
-          trd = getTransition((dx+0.5+xs[1])/2, dy-shift2*wth/2, locplayer.angle, locplayer.alt, lw);
+        if(xs[1]>0.5) {
+          per = [0, xs[1]-0.5];
+          trd = getTransition((2*dx+0.5+xs[1])/2, dy-shift2*wth/2, locplayer.angle, locplayer.alt, lw);
           wallvals.push([
             tr[0], tr[1],
             cos2, sin2*(1-locplayer.alt), 0, locplayer.alt, trd[0], trd[1]-locplayer.alt*lw, 
-            per[0], per[1], lw*(xs[1]-(dx+0.5)), lw*2, 'w', locwalls[i][j][1][wlind2]
+            per[0], per[1], lw*(xs[1]-0.5), lw*2, 'w', locwalls[i][j][1][wlind2]
           ]);
         }
 
-        trd = getTransition((xs[1]+xs[0])/2, dy, locplayer.angle, locplayer.alt, lw);
+        trd = getTransition((2*dx+xs[1]+xs[0])/2, dy, locplayer.angle, locplayer.alt, lw);
         wallvals.push([
           tr[0], tr[1],
           cos1, sin1*(1-locplayer.alt), -sin1, cos1 * (1-locplayer.alt), trd[0], trd[1]-(locplayer.alt)*lw*2,
@@ -287,10 +283,10 @@ function getWalls(data) {
         ]);
 
         //if(xs[wlind1]==dx+0.5 || xs[wlind1]==dx-0.5) {
-        if(xs[wlind1]>dx+0.5 || xs[wlind1]<dx-0.5) {
+        if(xs[wlind1]>0.5 || xs[wlind1]<-0.5) {
           //if(locwalls[i][j+2*wlind1-1]==null || locwalls[i][j+2*wlind1-1][1][0]==0) {
           if(locwalls[i-wlind2]==null || locwalls[i-wlind2][j+wlind1]==null || locwalls[i-wlind2][j+wlind1][0][0]==0) {
-            trd = getTransition(xs[wlind1], dy, locplayer.angle, locplayer.alt, lw);
+            trd = getTransition(dx+xs[wlind1], dy, locplayer.angle, locplayer.alt, lw);
             wallvals.push([
               tr[0], tr[1],
               cos1, sin1*(1-locplayer.alt), 0, locplayer.alt, trd[0], trd[1]-locplayer.alt*lw,
