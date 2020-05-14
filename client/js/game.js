@@ -44,6 +44,7 @@ var floorimgs = [floor1img];
 var wallimgs = [null, wall1img, wall2img];
 
 socket.on('newPositions', function(data){
+  data = JSON.parse(data);
   if(id == null) return;
   if(data.player[id]==null) return;
 
@@ -56,8 +57,14 @@ socket.on('newPositions', function(data){
 
   drawfloor(data);
   drawObj(data);
-  
+  console.log(data.player)
+  console.log(data.bullet)
+  for(var i = 0; i <data.bullet.length;i++){
+    ctx.fillRect(data.bullet[i].x,data.bullet[i].y,10,10);
+  }
+
 });
+
 
 function drawfloor(data) {
   var locplayer = data.player[id];

@@ -159,31 +159,33 @@ Player.update = function(){
 }
 
 
-var Bullet = function(ang) {
+var Bullet = function(sid,x,y,ang) {
 	var self = {
-		x:250,
-		y:250,
-		id:Math.random(),
+		x:x,
+		y:y,
+		id:sid,
 		angle:ang,
 		vel:2
 	}
 	self.updateBul = function(){
-		self.x += Math.cos(self.angle/180*Math.PI)*vel;
-		self.y += Math.sin(self.angle/180*Math.PI)*vel;
+		self.x += Math.cos(self.angle/180*Math.PI)*self.vel;
+		self.y += Math.sin(self.angle/180*Math.PI)*self.vel;
 	}
 	Bullet.list[self.id] = self;
 	return self;
 }
-
+bcnt = 0
 Bullet.list = {};
+Bullet.onShoot = function(angle,x,y){
+	var bul = Bullet(bcnt,250,250,angle);
+	bcnt+=1
+}
 Bullet.update = function(){
-	var pack ={};
 	for(var i in Bullet.list){
 		var bullet = Bullet.list[i];
 		bullet.updateBul();
-		pack[i] = bullet;
 	}
-	return pack;
+	return Bullet.list;
 }
 
 
@@ -197,6 +199,10 @@ io.sockets.on('connection', function(socket){
 	var data = [socket.id];
 	SOCKET_LIST[socket.id].emit('initial', data);
 
+	socket.on('mouse',function(){
+		Bullet.onShoot(0)
+	});
+
 	socket.on('disconnect',function(){
 		console.log('socket disconnect');
 		delete SOCKET_LIST[socket.id];
@@ -206,12 +212,13 @@ io.sockets.on('connection', function(socket){
 
 
 setInterval(function(){
+
 	var pack = {
 		player:Player.update(),
 		bullet:Bullet.update(),
 	}
-
+	pack = JSON.stringify(pack);
 	for(var i in SOCKET_LIST){
-		SOCKET_LIST[i].emit('newPositions',pack)
+		SOCKET_LIST[i].emit('newPositions',pack);
 	}
 }, 1000/60);
