@@ -9,6 +9,27 @@ app.get('/',function(req,res) {
 app.use('/client',express.static(__dirname+'/client'))
 server.listen(5000);
 
+var floor = [[
+	[0,0,0,0,0,0],
+	[0,1,0,0,0,0],
+	[0,0,0,0,0,0],
+	[0,0,0,0,0,0],
+	[0,0,0,0,0,0],
+	[0,0,0,0,0,0],  
+  ]];
+
+var walls = [[
+  [[[2, 1], [2, 1]], [[0, 0], [2, 1]], [[0, 0], [0, 0]], [[0, 0], [2, 1]], [[0, 0], [2, 1]], [[0, 0], [2, 1]], [[1, 2], [0, 0]]],
+  [[[2, 1], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[1, 2], [0, 0]]],
+  [[[2, 1], [1, 1]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]]],
+  [[[2, 1], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [1, 1]], [[1, 2], [0, 0]]],
+  [[[2, 1], [1, 1]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[1, 2], [0, 0]]],
+  [[[2, 1], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[1, 2], [0, 0]]],
+  [[[0, 0], [1, 2]], [[0, 0], [1, 2]], [[0, 0], [1, 2]], [[0, 0], [0, 0]], [[0, 0], [1, 2]], [[0, 0], [1, 2]], [[0, 0], [0, 0]]]
+]];
+
+var wth = 0.25;
+
 var SOCKET_LIST = {};
 var Player = function(sid) {
 	var self = {
@@ -63,14 +84,25 @@ var Player = function(sid) {
 		self.x+=yd*Math.sin(rad);
 		self.y+=xd*Math.sin(2*Math.PI-rad);
 		self.y+=yd*Math.cos(rad);
+
+		var locwalls = walls[self.mapId];
 		
-		//redo collisions
-		/*if(isValid(self.mapId, self.x, self.y) && locmap[self.y | 0][self.x | 0]==0) return;
-		if(!isValid(self.mapId, self.x, oy) || locmap[oy | 0][self.x | 0]!=0) {
-			self.x = (self.x>ox) ? (Math.floor(self.x)-.0001): (ox | 0);
-		}
-		if(!isValid(self.mapId, ox, self.y) || locmap[self.y | 0][ox | 0]!=0) {
-			self.y = (self.y>oy) ? (Math.floor(self.y)-.0001): (oy | 0);
+		//finish collisions
+		var sxr = self.x | 0;
+		var syr = self.y | 0;
+		var oxr = ox | 0;
+		var oyr = oy | 0;
+
+		var xwz = self.x-sxr < wth/2 || self.x-sxr > 1-wth/2;
+		var ywz = self.y-syr < wth/2 || self.y-syr > 1-wth/2;
+
+		/*if(xwz && ywz) {
+			self.x = (self.x>ox) ? (oxr+1-wth/2) : (oxr+wth/2);
+			self.y = (self.y>oy) ? (oyr+1-wth/2) : (oyr+wth/2);
+		} else if(xwz) {
+			self.x = (self.x>ox) ? (oxr+1-wth/2) : (oxr+wth/2);
+		} else if(ywz) {
+			self.y = (self.y>oy) ? (oyr+1-wth/2) : (oyr+wth/2);
 		}*/
 	}
 	Player.list[self.id] = self;

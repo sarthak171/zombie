@@ -8,8 +8,6 @@ var size = {
   height: window.innerHeight || document.body.clientHeight
 }
 
-var ratio = .7;
-
 var floor = [[
 	[0,0,0,0,0,0],
 	[0,1,0,0,0,0],
@@ -20,7 +18,7 @@ var floor = [[
   ]];
 
 var walls = [[
-  [[[2, 1], [2, 1]], [[0, 0], [2, 1]], [[0, 0], [0, 0]], [[0, 0], [2, 1]], [[0, 0], [2, 1]], [[0, 0], [2, 1]], [[1, 2], [0, 0]]],
+  [[[2, 1], [2, 1]], [[0, 0], [2, 1]], [[1, 1], [0, 0]], [[0, 0], [2, 1]], [[0, 0], [2, 1]], [[0, 0], [2, 1]], [[1, 2], [0, 0]]],
   [[[2, 1], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[1, 2], [0, 0]]],
   [[[2, 1], [1, 1]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]]],
   [[[2, 1], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [1, 1]], [[1, 2], [0, 0]]],
@@ -29,7 +27,7 @@ var walls = [[
   [[[0, 0], [1, 2]], [[0, 0], [1, 2]], [[0, 0], [1, 2]], [[0, 0], [0, 0]], [[0, 0], [1, 2]], [[0, 0], [1, 2]], [[0, 0], [0, 0]]]
 ]];
 
-var wth = 0.25;
+var wth = 0.5;
 
 var player1img = document.getElementById("player1");
 var wall1img = document.getElementById("wall1");
@@ -45,8 +43,6 @@ var playerimgs = [player1img];
 var floorimgs = [floor1img];
 var wallimgs = [null, wall1img, wall2img];
 
-
-
 socket.on('newPositions', function(data){
   if(id == null) return;
   if(data.player[id]==null) return;
@@ -56,6 +52,7 @@ socket.on('newPositions', function(data){
   canvas.height = size.height;
   ctx = canvas.getContext('2d');
   ctx.imageSmoothingEnabled = false;
+  ctx.clearRect(0, 0, size.width, size.height);
 
   drawfloor(data);
   drawObj(data);
@@ -123,11 +120,11 @@ function drawObj(data) {
       ctx.drawImage(
         dimg, 
         dobj[8]*dimg.width, 0, (dobj[9]-dobj[8])*dimg.width, dimg.height, 
-        -dobj[10]/2, -dobj[11]/2, dobj[10]+2, dobj[11]+2
+        -dobj[10]/2, -dobj[11]/2, dobj[10]+1, dobj[11]+1
       );
     } else {
       ctx.fillStyle = "black";
-      ctx.fillRect(-dobj[10]/2, -dobj[11]/2, dobj[10]+2, dobj[11]+2)
+      ctx.fillRect(-dobj[10]/2, -dobj[11]/2, dobj[10]+1, dobj[11]+1)
     }
   }
 }
@@ -135,6 +132,9 @@ function drawObj(data) {
 function getWalls(data) {
   var wallvals = [];
   var locplayer = data.player[id];
+
+  //console.log(locplayer.x + ", " + locplayer.y);
+
   var locwalls = walls[locplayer.mapId];
   var lw = size.width/15;
 
@@ -165,9 +165,11 @@ function getWalls(data) {
         tr = getTransition(dx, dy, locplayer.angle, locplayer.alt, lw);
         
         if(locwalls[i][j+wlind1-1]!=null && locwalls[i][j+wlind1-1][1][0]!=0) ys[0]+=wth/2;
+        //else if(locwalls[i][j-wlind1]!=null && locwalls[i][j-wlind1][1][0]!=0) ys[0]-=wth/2;
         else if(locwalls[i-1]==null || locwalls[i-1][j][0][0]==0) ys[0]-=wth/2;
         
         if(locwalls[i+1]!=null && locwalls[i+1][j+wlind1-1]!=null && locwalls[i+1][j+wlind1-1][1][0]!=0) ys[1]-=wth/2;
+        //else if(locwalls[i+1]!=null && locwalls[i+1][j-wlind1]!=null && locwalls[i+1][j-wlind1][1][0]!=0) ys[1]+=wth/2;
         else if(locwalls[i+1]==null || locwalls[i+1][j][0][0]==0) ys[1]+=wth/2;
 
         per = [Math.max(dy-0.5, ys[0])-(dy-0.5),Math.min(dy+0.5, ys[1])-(dy-0.5)];
@@ -200,20 +202,24 @@ function getWalls(data) {
           ]);
         }
 
-        trd = getTransition(dx, dy, locplayer.angle, locplayer.alt, lw);
+        var ystop = [dy-0.5-Math.abs(dy-0.5-ys[0]), dy+0.5+Math.abs(dy+0.5-ys[1])];
+
+        trd = getTransition(dx, (ystop[1]+ystop[0])/2, locplayer.angle, locplayer.alt, lw);
         wallvals.push([
           tr[0], tr[1],
           cos1, sin1*(1-locplayer.alt), -sin1, cos1 * (1-locplayer.alt), trd[0], trd[1]-(locplayer.alt)*lw*2,
-          null, null, lw*(1+wth), wth*lw, 'wt', null
+          null, null, lw*(ystop[1]-ystop[0]), wth*lw, 'wtop', null
         ]);
 
+        //if(ys[wlind2]==dy+0.5 || ys[wlind2]==dy-0.5) {
         if(ys[wlind2]>dy+0.5 || ys[wlind2]<dy-0.5) {
+          //if(locwalls[i+2*wlind2-1]==null || locwalls[i+2*wlind2-1][j][0][0]==0) {
           if(locwalls[i+wlind2]==null || locwalls[i+wlind2][j-wlind1]==null || locwalls[i+wlind2][j-wlind1][1][0]==0) {
             trd = getTransition(dx, ys[wlind2], locplayer.angle, locplayer.alt, lw);
             wallvals.push([
               tr[0], tr[1],
               cos2, sin2*(1-locplayer.alt), 0, locplayer.alt, trd[0], trd[1]-locplayer.alt*lw, 
-              null, null, lw*wth, lw*2, 'ws', null
+              0, wth, lw*wth, lw*2, 'w', locwalls[i][j][0][0]
             ]);
           }
         }
@@ -227,16 +233,19 @@ function getWalls(data) {
         tr = getTransition(dx, dy, locplayer.angle, locplayer.alt, lw);
 
         if(locwalls[i+wlind2-1]!=null && locwalls[i+wlind2-1][j][0][0]!=0) xs[0]+=wth/2;
+        //else if(locwalls[i-wlind2]!=null && locwalls[i-wlind2][j][0][0]!=0) xs[0]-=wth/2;
         else if(locwalls[i][j-1]==null || locwalls[i][j-1][1][0]==0) xs[0]-=wth/2;
         
         if(locwalls[i+wlind2-1]!=null && locwalls[i+wlind2-1][j+1]!=null && locwalls[i+wlind2-1][j+1][0][0]!=0) xs[1]-=wth/2;
+        //else if(locwalls[i-wlind2]!=null && locwalls[i-wlind2][j+1]!=null && locwalls[i-wlind2][j+1][0][0]!=0) xs[1]+=wth/2;
         else if(locwalls[i][j+1]==null || locwalls[i][j+1][1][0]==0) xs[1]+=wth/2;
 
         trd = getTransition((Math.min(dx+0.5, xs[1])+Math.max(dx-0.5, xs[0]))/2, dy-shift2*wth/2, locplayer.angle, locplayer.alt, lw);
 
         per = [Math.max(dx-0.5, xs[0])-(dx-0.5),Math.min(dx+0.5, xs[1])-(dx-0.5)];
         if(xs[1]-xs[0]<1) per = [xs[0]-(dx-0.5), xs[1]-(dx-0.5)];
-        
+
+        trd = getTransition((Math.min(dx+0.5, xs[1])+Math.max(dx-0.5, xs[0]))/2, dy-shift2*wth/2, locplayer.angle, locplayer.alt, lw);
         wallvals.push([
           tr[0], tr[1],
           cos2, sin2*(1-locplayer.alt), 0, locplayer.alt, trd[0], trd[1]-locplayer.alt*lw, 
@@ -263,20 +272,22 @@ function getWalls(data) {
           ]);
         }
 
-        trd = getTransition(dx, dy, locplayer.angle, locplayer.alt, lw);
+        trd = getTransition((xs[1]+xs[0])/2, dy, locplayer.angle, locplayer.alt, lw);
         wallvals.push([
           tr[0], tr[1],
           cos1, sin1*(1-locplayer.alt), -sin1, cos1 * (1-locplayer.alt), trd[0], trd[1]-(locplayer.alt)*lw*2,
-          null, null, wth*lw, lw*(1+wth), 'wt', null
+          null, null, wth*lw, lw*(xs[1]-xs[0]), 'wtop', null
         ]);
 
+        //if(xs[wlind1]==dx+0.5 || xs[wlind1]==dx-0.5) {
         if(xs[wlind1]>dx+0.5 || xs[wlind1]<dx-0.5) {
+          //if(locwalls[i][j+2*wlind1-1]==null || locwalls[i][j+2*wlind1-1][1][0]==0) {
           if(locwalls[i-wlind2]==null || locwalls[i-wlind2][j+wlind1]==null || locwalls[i-wlind2][j+wlind1][0][0]==0) {
             trd = getTransition(xs[wlind1], dy, locplayer.angle, locplayer.alt, lw);
             wallvals.push([
               tr[0], tr[1],
               cos1, sin1*(1-locplayer.alt), 0, locplayer.alt, trd[0], trd[1]-locplayer.alt*lw,
-              null, null, lw*wth, lw*2, 'ws', null
+              0, wth, lw*wth, lw*2, 'w', locwalls[i][j][1][0]
             ]);
           }
         }
@@ -305,7 +316,7 @@ function getPlayers(data) {
 
     pllocs.push([
       tr[0], tr[1], 
-      1, 0, 0, 1, tr[0]-lw*0.15, tr[1]-lw*.5, 
+      1, 0, 0, 1, tr[0], tr[1]-lw*.5, 
       0, 1, lw*0.3, lw, 'p', 0
     ]);
   }
@@ -385,11 +396,4 @@ document.onmouseup = function(event) {
     x:(event.clientX-size.width/2),
     y:(event.clientY-size.height/2),
   });
-}
-
-function multiplyPoint(px, py, mat) {
-  return {
-    x: px * mat[0][0] + py * mat[0][1] + mat[0][2],
-    y: px * mat[1][0] + py * mat[1][1] + mat[1][2]
-  }
 }
