@@ -19,13 +19,13 @@ var floor = [[
   ]];
 
 var walls = [[
-  [[[2, 1], [2, 1]], [[0, 0], [2, 1]], [[0, 0], [0, 0]], [[0, 0], [2, 1]], [[0, 0], [2, 1]], [[0, 0], [2, 1]], [[1, 2], [0, 0]]],
-  [[[2, 1], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[1, 2], [0, 0]]],
-  [[[2, 1], [1, 1]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]]],
-  [[[2, 1], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [1, 1]], [[1, 2], [0, 0]]],
-  [[[2, 1], [1, 1]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[1, 2], [0, 0]]],
-  [[[2, 1], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[1, 2], [0, 0]]],
-  [[[0, 0], [1, 2]], [[0, 0], [1, 2]], [[0, 0], [1, 2]], [[0, 0], [0, 0]], [[0, 0], [1, 2]], [[0, 0], [1, 2]], [[0, 0], [0, 0]]]
+	[[[2, 1], [2, 1]], [[0, 0], [2, 1]], [[1, 1], [0, 0]], [[0, 0], [2, 1]], [[0, 0], [2, 1]], [[0, 0], [2, 1]], [[1, 2], [0, 0]]],
+	[[[2, 1], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[1, 2], [0, 0]]],
+	[[[2, 1], [1, 1]], [[0, 0], [1, 1]], [[0, 0], [1, 1]], [[0, 0], [1, 1]], [[1, 1], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]]],
+	[[[2, 1], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[1, 1], [0, 0]], [[0, 0], [1, 1]], [[1, 2], [0, 0]]],
+	[[[2, 1], [1, 1]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[1, 1], [0, 0]], [[0, 0], [0, 0]], [[1, 2], [0, 0]]],
+	[[[2, 1], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]], [[1, 2], [0, 0]]],
+	[[[0, 0], [1, 2]], [[0, 0], [1, 2]], [[0, 0], [1, 2]], [[0, 0], [0, 0]], [[0, 0], [1, 2]], [[0, 0], [1, 2]], [[0, 0], [0, 0]]]
 ]];
 
 var wth = 0.25;
@@ -93,17 +93,45 @@ var Player = function(sid) {
 		var oxr = ox | 0;
 		var oyr = oy | 0;
 
-		var xwz = self.x-sxr < wth/2 || self.x-sxr > 1-wth/2;
-		var ywz = self.y-syr < wth/2 || self.y-syr > 1-wth/2;
+		if(self.x<wth/2) self.x = wth/2;
+		if(self.x>locwalls[0].length-1-wth/2) self.x = locwalls[0].length-1-wth/2;
+		if(self.y<wth/2) self.y = wth/2;
+		if(self.y>locwalls.length-1-wth/2) self.y = locwalls.length-1-wth/2;
 
-		/*if(xwz && ywz) {
-			self.x = (self.x>ox) ? (oxr+1-wth/2) : (oxr+wth/2);
-			self.y = (self.y>oy) ? (oyr+1-wth/2) : (oyr+wth/2);
-		} else if(xwz) {
-			self.x = (self.x>ox) ? (oxr+1-wth/2) : (oxr+wth/2);
-		} else if(ywz) {
-			self.y = (self.y>oy) ? (oyr+1-wth/2) : (oyr+wth/2);
-		}*/
+		var xwz = self.x-sxr < wth/2 || self.x-sxr > 1-wth/2 || sxr!=oxr;
+		var ywz = self.y-syr < wth/2 || self.y-syr > 1-wth/2 || syr!=oyr;
+		var oxwz = ox-oxr < wth/2 || ox-oxr > 1-wth/2;
+		var oywz = oy-oyr < wth/2 || oy-oyr > 1-wth/2;
+
+		var xin = (self.x<ox) ? 0 : 1;
+		var yin = (self.y<oy) ? 0 : 1;
+
+		if(xwz&&!oxwz&&ywz&&!oywz) {
+			if(locwalls[oyr][oxr+xin][0][0]!=0) {
+				self.x = (self.x<ox) ? oxr+wth/2 : oxr+1-wth/2;
+			}
+			if(locwalls[oyr+yin][oxr][1][0]!=0) {
+				self.y = (self.y<oy) ? oyr+wth/2 : oyr+1-wth/2;
+			}
+		} /*else if(xwz&&!oxwz&&ywz) {
+			if((locwalls[oyr+yin-1]!=null && locwalls[oyr+yin-1][oxr+xin][0][0]!=0) || locwalls[oyr+yin][oxr+xin][0][0]!=0) {
+				self.x = (self.x<ox) ? oxr+wth/2 : oxr+1-wth/2;
+			}
+		} else if(xwz&&ywz&&!oywz){
+			if((locwalls[oyr+yin][oxr+xin-1]!=null && locwalls[oyr+yin][oxr+xin-1][1][0]!=0) || locwalls[oyr+yin][oxr+xin][1][0]!=0) {
+				self.y = (self.y<oy) ? oyr+wth/2 : oyr+1-wth/2;
+			}
+		}*/ else if(xwz&&!oxwz) {
+			if(locwalls[oyr][oxr+xin][0][0]!=0) {
+				self.x = (self.x<ox) ? oxr+wth/2 : oxr+1-wth/2;
+			}
+		} else if(ywz&&!oywz) {
+			if(locwalls[oyr+yin][oxr][1][0]!=0) {
+				self.y = (self.y<oy) ? oyr+wth/2 : oyr+1-wth/2;
+			}
+		}
+
+		
 	}
 	Player.list[self.id] = self;
 	return self;
