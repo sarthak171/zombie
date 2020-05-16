@@ -40,6 +40,8 @@ var Player = function(sid) {
 		pLeft:false,
 		pUp:false,
 		pDown:false,
+		pMouse:false,
+		angMouse:0,
 		rl:false,
 		rr:false,
 		au:false,
@@ -130,8 +132,12 @@ var Player = function(sid) {
 				self.y = (self.y<oy) ? oyr+wth/2 : oyr+1-wth/2;
 			}
 		}
-
-		
+		if(self.pMouse){
+			self.shootBul(self.angMouse)
+		}	
+	}
+	self.shootBul = function(angle){
+		var bul = Bullet(self.id,angle,self.x,self.y);
 	}
 	Player.list[self.id] = self;
 	return self;
@@ -170,6 +176,12 @@ Player.onConnect = function(socket){
 		if(data.inputID === 'ad'){
 			player.ad = data.state;
 		}
+		if(data.inputID === 'fire'){
+			player.pMouse = data.state;
+		}
+		if(data.inputID === 'ang'){
+			player.angMouse = data.state;
+		}
 	});
 } 
 Player.onDisconnect = function(socket){
@@ -187,7 +199,7 @@ Player.update = function(){
 }
 
 
-var Bullet = function(sid,x,y,ang) {
+var Bullet = function(sid,ang,x,y) {
 	var self = {
 		x:x,
 		y:y,
@@ -204,14 +216,9 @@ var Bullet = function(sid,x,y,ang) {
 }
 bcnt = 0
 Bullet.list = {};
-Bullet.onShoot = function(angle,x,y){
-	var bul = Bullet(bcnt,250,250,angle);
-	bcnt+=1
-}
 Bullet.update = function(){
 	for(var i in Bullet.list){
-		var bullet = Bullet.list[i];
-		bullet.updateBul();
+		Bullet.list[i].updateBul();
 	}
 	return Bullet.list;
 }
@@ -227,9 +234,6 @@ io.sockets.on('connection', function(socket){
 	var data = [socket.id];
 	SOCKET_LIST[socket.id].emit('initial', data);
 
-	socket.on('mouse',function(){
-		Bullet.onShoot(0)
-	});
 
 	socket.on('disconnect',function(){
 		console.log('socket disconnect');

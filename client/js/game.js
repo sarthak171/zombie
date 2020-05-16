@@ -57,9 +57,8 @@ socket.on('newPositions', function(data){
 
   drawfloor(data);
   drawObj(data);
-  console.log(data.player)
-  console.log(data.bullet)
-  for(var i = 0; i <data.bullet.length;i++){
+  for(var i in data.bullet){
+    console.log(data.bullet.length)
     ctx.fillRect(data.bullet[i].x,data.bullet[i].y,10,10);
   }
 
@@ -387,17 +386,22 @@ document.onkeyup = function(event){
 }
 
 document.onmousedown = function(event){
-  socket.emit('mouse',{
-    mouseDown:true,
-    x:(event.clientX-size.width/2),
-    y:(event.clientY-size.height/2),
+  socket.emit('keyPress',{
+    inputID:'fire',
+    state:true
   });
 }
 
 document.onmouseup = function(event) {
-  socket.emit('mouse',{
-    mouseDown:false,
-    x:(event.clientX-size.width/2),
-    y:(event.clientY-size.height/2),
+  socket.emit('keyPress',{
+    inputID:'fire',
+    state:false
+  });
+}
+
+document.onmousemove = function(event){
+  socket.emit('keyPress',{
+    inputID:'ang',
+    state:Math.atan2((event.clientY-size.height/2),(event.clientX-size.width/2))/ Math.PI * 180
   });
 }
