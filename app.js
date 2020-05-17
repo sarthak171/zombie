@@ -110,29 +110,34 @@ var Player = function(sid) {
 		var yin = (self.y<oy) ? 0 : 1;
 
 		if(xwz&&!oxwz&&ywz&&!oywz) {
-			if(locwalls[oyr][oxr+xin][0][0]!=0) {
-				self.x = (self.x<ox) ? oxr+wth/2 : oxr+1-wth/2;
-			}
-			if(locwalls[oyr+yin][oxr][1][0]!=0) {
-				self.y = (self.y<oy) ? oyr+wth/2 : oyr+1-wth/2;
-			}
-		} /*else if(xwz&&!oxwz&&ywz) {
-			if((locwalls[oyr+yin-1]!=null && locwalls[oyr+yin-1][oxr+xin][0][0]!=0) || locwalls[oyr+yin][oxr+xin][0][0]!=0) {
-				self.x = (self.x<ox) ? oxr+wth/2 : oxr+1-wth/2;
-			}
-		} else if(xwz&&ywz&&!oywz){
-			if((locwalls[oyr+yin][oxr+xin-1]!=null && locwalls[oyr+yin][oxr+xin-1][1][0]!=0) || locwalls[oyr+yin][oxr+xin][1][0]!=0) {
-				self.y = (self.y<oy) ? oyr+wth/2 : oyr+1-wth/2;
-			}
-		}*/ else if(xwz&&!oxwz) {
-			if(locwalls[oyr][oxr+xin][0][0]!=0) {
-				self.x = (self.x<ox) ? oxr+wth/2 : oxr+1-wth/2;
-			}
-		} else if(ywz&&!oywz) {
-			if(locwalls[oyr+yin][oxr][1][0]!=0) {
-				self.y = (self.y<oy) ? oyr+wth/2 : oyr+1-wth/2;
-			}
-		}
+            if(locwalls[oyr][oxr+xin][0][0]!=0) {
+                self.x = (self.x<ox) ? oxr+wth/2 : oxr+1-wth/2;
+            }
+            if(locwalls[oyr+yin][oxr][1][0]!=0) {
+                self.y = (self.y<oy) ? oyr+wth/2 : oyr+1-wth/2;
+            }
+        } else if(xwz&&!oxwz&&ywz) {
+            if((locwalls[oyr+yin-1]!=null && locwalls[oyr+yin-1][oxr+xin][0][0]!=0) || 
+                locwalls[oyr+yin][oxr+xin][0][0]!=0 ||
+                locwalls[oyr+yin][oxr+xin][1][0]!=0) {
+                self.x = (self.x<ox) ? oxr+wth/2 : oxr+1-wth/2;
+            }
+        } else if(xwz&&ywz&&!oywz){
+            if((locwalls[oyr+yin][oxr+xin-1]!=null && locwalls[oyr+yin][oxr+xin-1][1][0]!=0) || 
+                locwalls[oyr+yin][oxr+xin][1][0]!=0 ||
+                locwalls[oyr+yin][oxr+xin][0][0]!=0) {
+                self.y = (self.y<oy) ? oyr+wth/2 : oyr+1-wth/2;
+            }
+        } else if(xwz&&!oxwz) {
+            if(locwalls[oyr][oxr+xin][0][0]!=0) {
+                self.x = (self.x<ox) ? oxr+wth/2 : oxr+1-wth/2;
+            }
+        } else if(ywz&&!oywz) {
+            if(locwalls[oyr+yin][oxr][1][0]!=0) {
+                self.y = (self.y<oy) ? oyr+wth/2 : oyr+1-wth/2;
+            }
+        }
+
 		if(self.pMouse){
 			self.shootBul(self.angMouse)
 		}	

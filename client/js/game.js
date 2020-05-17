@@ -151,11 +151,11 @@ function getWalls(data) {
   var shift1 = (1-2*wlind1);
   var shift2 = (1-2*wlind2);
 
-  var radian1 = (locplayer.angle+90) / 180 * Math.PI;
+  var radian1 = (locplayer.angle+90.001) / 180 * Math.PI;
   var sin1 = Math.sin(radian1);
   var cos1 = Math.cos(radian1);
 
-  var radian2 = (locplayer.angle) / 180 * Math.PI;
+  var radian2 = (locplayer.angle+.001) / 180 * Math.PI;
   var sin2 = Math.sin(radian2);
   var cos2 = Math.cos(radian2);
 
