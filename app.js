@@ -29,7 +29,7 @@ var walls = [[
 	[[[0, 0], [1, 2]], [[0, 0], [1, 2]], [[0, 0], [1, 2]], [[0, 0], [0, 0]], [[0, 0], [1, 2]], [[0, 0], [1, 2]], [[0, 0], [0, 0]]]
 ]];
 
-var wth = 0.25;
+var wth = 0.5;
 
 var SOCKET_LIST = {};
 var Player = function(sid) {
@@ -50,17 +50,20 @@ var Player = function(sid) {
 		vel:0.1,
 		rvel:3.5,
 		avel:.01,
-		angle:45,
+		angle:0,
 		alt:0.8,
 		mapId:0,
 		imgId:0,
 	}
 	self.updatePos = function(t){
+		if(self.pMouse){
+			self.shootBul(self.angMouse)
+		}
+
 		if(self.rl) self.angle+=self.rvel;
 		if(self.rr) self.angle-=self.rvel;
 		if(self.angle<0) self.angle+=360;
 		if(self.angle>=360) self.angle-=360;
-
 
 		if(self.au) self.alt-=self.avel;
 		if(self.ad) self.alt+=self.avel;
@@ -90,7 +93,6 @@ var Player = function(sid) {
 
 		var locwalls = walls[self.mapId];
 		
-		//finish collisions
 		var sxr = self.x | 0;
 		var syr = self.y | 0;
 		var oxr = ox | 0;
@@ -101,16 +103,17 @@ var Player = function(sid) {
 		if(self.y<wth/2) self.y = wth/2;
 		if(self.y>locwalls.length-1-wth/2) self.y = locwalls.length-1-wth/2;
 
-		var xwz = self.x-sxr < wth/2 || self.x-sxr > 1-wth/2 || sxr!=oxr;
-		var ywz = self.y-syr < wth/2 || self.y-syr > 1-wth/2 || syr!=oyr;
+		var xwz = self.x-sxr < wth/2 || self.x-sxr > 1-wth/2;
+		var ywz = self.y-syr < wth/2 || self.y-syr > 1-wth/2;
 		var oxwz = ox-oxr < wth/2 || ox-oxr > 1-wth/2;
 		var oywz = oy-oyr < wth/2 || oy-oyr > 1-wth/2;
 
-		var xin = (self.x<ox) ? 0 : 1;
-		var yin = (self.y<oy) ? 0 : 1;
+		var xin = oxwz ? ((ox-oxr < wth/2) ? 0 : 1) : ((self.x-sxr<wth/2) ? 0 : 1);
+		var yin = oywz ? ((oy-oyr < wth/2) ? 0 : 1) : ((self.y-syr<wth/2) ? 0 : 1);
 
 		if(xwz&&!oxwz&&ywz&&!oywz) {
-            if(locwalls[oyr][oxr+xin][0][0]!=0) {
+			//finish
+        	if(locwalls[oyr][oxr+xin][0][0]!=0) {
                 self.x = (self.x<ox) ? oxr+wth/2 : oxr+1-wth/2;
             }
             if(locwalls[oyr+yin][oxr][1][0]!=0) {
@@ -119,13 +122,13 @@ var Player = function(sid) {
         } else if(xwz&&!oxwz&&ywz) {
             if((locwalls[oyr+yin-1]!=null && locwalls[oyr+yin-1][oxr+xin][0][0]!=0) || 
                 locwalls[oyr+yin][oxr+xin][0][0]!=0 ||
-                locwalls[oyr+yin][oxr+xin][1][0]!=0) {
+                locwalls[oyr+yin][oxr+2*xin-1][1][0]!=0) {
                 self.x = (self.x<ox) ? oxr+wth/2 : oxr+1-wth/2;
             }
         } else if(xwz&&ywz&&!oywz){
             if((locwalls[oyr+yin][oxr+xin-1]!=null && locwalls[oyr+yin][oxr+xin-1][1][0]!=0) || 
                 locwalls[oyr+yin][oxr+xin][1][0]!=0 ||
-                locwalls[oyr+yin][oxr+xin][0][0]!=0) {
+                locwalls[oyr+2*yin-1][oxr+xin][0][0]!=0) {
                 self.y = (self.y<oy) ? oyr+wth/2 : oyr+1-wth/2;
             }
         } else if(xwz&&!oxwz) {
@@ -136,11 +139,7 @@ var Player = function(sid) {
             if(locwalls[oyr+yin][oxr][1][0]!=0) {
                 self.y = (self.y<oy) ? oyr+wth/2 : oyr+1-wth/2;
             }
-        }
-
-		if(self.pMouse){
-			self.shootBul(self.angMouse)
-		}	
+        }	
 	}
 	self.shootBul = function(angle){
 		var bul = Bullet(self.id,angle,self.x,self.y);

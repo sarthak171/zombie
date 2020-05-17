@@ -1,3 +1,4 @@
+
 var canvas = document.getElementById("canvas");
 var ctx = canvas.getContext('2d');
 var socket = io();
@@ -9,12 +10,12 @@ var size = {
 }
 
 var floor = [[
-	[0,0,0,0,0,0],
-	[0,1,0,0,0,0],
-	[0,0,0,0,0,0],
-	[0,0,0,0,0,0],
-	[0,0,0,0,0,0],
-	[0,0,0,0,0,0],  
+  [0,0,0,0,0,0],
+  [0,1,0,0,0,0],
+  [0,0,0,0,0,0],
+  [0,0,0,0,0,0],
+  [0,0,0,0,0,0],
+  [0,0,0,0,0,0],  
   ]];
 
 var walls = [[
@@ -27,7 +28,7 @@ var walls = [[
   [[[0, 0], [1, 2]], [[0, 0], [1, 2]], [[0, 0], [1, 2]], [[0, 0], [0, 0]], [[0, 0], [1, 2]], [[0, 0], [1, 2]], [[0, 0], [0, 0]]]
 ]];
 
-var wth = 0.25;
+var wth = 0.5;
 
 var player1img = document.getElementById("player1");
 var wall1img = document.getElementById("wall1");
@@ -58,7 +59,6 @@ socket.on('newPositions', function(data){
   drawfloor(data);
   drawObj(data);
   for(var i in data.bullet){
-    console.log(data.bullet.length)
     ctx.fillRect(data.bullet[i].x,data.bullet[i].y,10,10);
   }
 
@@ -328,8 +328,8 @@ function getPlayers(data) {
 
 function getTransition(dx, dy, angle, alt, lw) {
   var dist = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy,  2));
-	var tang = (Math.atan2(dy, dx)+angle*Math.PI/180)%(2*Math.PI);
-	var xc = size.width/2+Math.cos(tang)*dist*lw;
+  var tang = (Math.atan2(dy, dx)+angle*Math.PI/180)%(2*Math.PI);
+  var xc = size.width/2+Math.cos(tang)*dist*lw;
   var yc = size.height/2+Math.sin(tang)*dist*lw*(1-alt);
   return [xc, yc];
 }
@@ -402,6 +402,6 @@ document.onmouseup = function(event) {
 document.onmousemove = function(event){
   socket.emit('keyPress',{
     inputID:'ang',
-    state:Math.atan2((event.clientY-size.height/2),(event.clientX-size.width/2))/ Math.PI * 180
+    state: (Math.atan2((event.clientY-size.height/2),(event.clientX-size.width/2))/ Math.PI * 180 +270) % 360
   });
 }
