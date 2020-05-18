@@ -2,11 +2,16 @@
 var canvas = document.getElementById("canvas");
 var ctx = canvas.getContext('2d');
 var socket = io();
-var id;
+var id, gldata, locplayer;
 
 var size = {
   width: window.innerWidth || document.body.clientWidth,
   height: window.innerHeight || document.body.clientHeight
+}
+
+var mousePos = {
+  x: 0,
+  y: 0
 }
 
 var floor = [[
@@ -46,8 +51,12 @@ var wallimgs = [null, wall1img, wall2img];
 
 socket.on('newPositions', function(data){
   data = JSON.parse(data);
+
   if(id == null) return;
   if(data.player[id]==null) return;
+  
+  gldata = data;
+  locplayer = data.player[id];
 
   updateSize();
   canvas.width = size.width;
@@ -56,17 +65,17 @@ socket.on('newPositions', function(data){
   ctx.imageSmoothingEnabled = false;
   ctx.clearRect(0, 0, size.width, size.height);
 
+  socket.emit('keyPress',{
+    inputID:'ang',
+    state: (Math.atan2((mousePos.y-size.height/2+size.width/30)/(1-locplayer.alt),(mousePos.x-size.width/2))/ Math.PI * 180-locplayer.angle+360) % 360
+  });
+
   drawfloor(data);
   drawObj(data);
-  for(var i in data.bullet){
-    ctx.fillRect(data.bullet[i].x,data.bullet[i].y,10,10);
-  }
-
 });
 
 
 function drawfloor(data) {
-  var locplayer = data.player[id];
   var locfloor = floor[locplayer.mapId];
 
   var lw = size.width/15;
@@ -96,7 +105,7 @@ function drawfloor(data) {
 function drawObj(data) {
   var objvals = [];
   Array.prototype.push.apply(objvals, getWalls(data));
-  //Array.prototype.push.apply(objvals, getObjects(data));
+  Array.prototype.push.apply(objvals, getObjects(data));
   Array.prototype.push.apply(objvals, getPlayers(data));
 
   var objinds = [];
@@ -137,9 +146,6 @@ function drawObj(data) {
 
 function getWalls(data) {
   var wallvals = [];
-  var locplayer = data.player[id];
-
-  //console.log(locplayer.x + ", " + locplayer.y);
 
   var locwalls = walls[locplayer.mapId];
   var lw = size.width/15;
@@ -300,11 +306,34 @@ function getWalls(data) {
 }
 
 function getObjects(data) {
-  return [];
+  var objectVals = [];
+  Array.prototype.push.apply(objectVals, getBullets(data));
+  return objectVals;
+}
+
+function getBullets(data) {
+  var lw = size.width/15;
+
+  var bulletVals = [];
+  var dx, dy;
+  var tr;
+
+  for(i in data.bullet) {
+    var bullet = data.bullet[i];
+    dx = bullet.x-locplayer.x;
+    dy = bullet.y-locplayer.y;
+    tr = getTransition(dx, dy, locplayer.angle, locplayer.alt, lw);
+    bulletVals.push([
+      tr[0], tr[1],
+      1, 0, 0, 1, tr[0], tr[1]-.5*lw,
+      null, null, lw*0.2, lw*0.1, 'b', null
+    ]);
+  }
+
+  return bulletVals;
 }
 
 function getPlayers(data) {
-  var locplayer = data.player[id];
   var pllocs = [];
   var dx, dy, tr, trd;
   var tplayer;
@@ -388,20 +417,18 @@ document.onkeyup = function(event){
 document.onmousedown = function(event){
   socket.emit('keyPress',{
     inputID:'fire',
-    state:true
+    state:true,
   });
 }
 
 document.onmouseup = function(event) {
   socket.emit('keyPress',{
     inputID:'fire',
-    state:false
+    state:false,
   });
 }
 
 document.onmousemove = function(event){
-  socket.emit('keyPress',{
-    inputID:'ang',
-    state: (Math.atan2((event.clientY-size.height/2),(event.clientX-size.width/2))/ Math.PI * 180 +270) % 360
-  });
+  mousePos.x = event.clientX;
+  mousePos.y = event.clientY;
 }

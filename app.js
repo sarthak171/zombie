@@ -57,7 +57,11 @@ var Player = function(sid) {
 	}
 	self.updatePos = function(t){
 		if(self.pMouse){
-			self.shootBul(self.angMouse)
+			self.shootBul(self.id, self.angMouse, self.x, self.y);
+		}
+
+		self.shootBul = function(id, angle, x, y){
+			var bul = Bullet(id,angle,x,y);
 		}
 
 		if(self.rl) self.angle+=self.rvel;
@@ -113,10 +117,14 @@ var Player = function(sid) {
 
 		if(xwz&&!oxwz&&ywz&&!oywz) {
 			//finish
-        	if(locwalls[oyr][oxr+xin][0][0]!=0) {
+        	if((locwalls[oyr+yin-1]!=null && locwalls[oyr+yin-1][oxr+xin][0][0]!=0) || 
+                locwalls[oyr+yin][oxr+xin][0][0]!=0 ||
+                locwalls[oyr+yin][oxr+2*xin-1][1][0]!=0) {
                 self.x = (self.x<ox) ? oxr+wth/2 : oxr+1-wth/2;
             }
-            if(locwalls[oyr+yin][oxr][1][0]!=0) {
+            if((locwalls[oyr+yin][oxr+xin-1]!=null && locwalls[oyr+yin][oxr+xin-1][1][0]!=0) || 
+                locwalls[oyr+yin][oxr+xin][1][0]!=0 ||
+                locwalls[oyr+2*yin-1][oxr+xin][0][0]!=0) {
                 self.y = (self.y<oy) ? oyr+wth/2 : oyr+1-wth/2;
             }
         } else if(xwz&&!oxwz&&ywz) {
@@ -141,9 +149,7 @@ var Player = function(sid) {
             }
         }	
 	}
-	self.shootBul = function(angle){
-		var bul = Bullet(self.id,angle,self.x,self.y);
-	}
+
 	Player.list[self.id] = self;
 	return self;
 }
@@ -210,11 +216,15 @@ var Bullet = function(sid,ang,x,y) {
 		y:y,
 		id:sid,
 		angle:ang,
-		vel:2
+		vel:0.2,
+		mapId:0
 	}
 	self.updateBul = function(){
 		self.x += Math.cos(self.angle/180*Math.PI)*self.vel;
 		self.y += Math.sin(self.angle/180*Math.PI)*self.vel;
+
+		if(self.x<0 || self.x>walls[self.mapId][0].length-1) delete Bullet.list[self.id];
+		else if(self.y<0 || self.y>walls[self.mapId].length-1) delete Bullet.list[self.id];
 	}
 	Bullet.list[self.id] = self;
 	return self;
