@@ -10,6 +10,8 @@ app.get('/',function(req,res) {
 app.use('/client',express.static(__dirname+'/client'))
 server.listen(5000);
 
+var bulletnum = 0;
+
 var floor = [[
 	[0,0,0,0,0,0],
 	[0,1,0,0,0,0],
@@ -57,11 +59,12 @@ var Player = function(sid) {
 	}
 	self.updatePos = function(t){
 		if(self.pMouse){
-			self.shootBul(self.id, self.angMouse, self.x, self.y);
+			self.shootBul(self.angMouse, self.x, self.y);
 		}
 
-		self.shootBul = function(id, angle, x, y){
-			var bul = Bullet(id,angle,x,y);
+		self.shootBul = function(angle, x, y){
+			var bul = Bullet(bulletnum,angle,x,y);
+			bulletnum++;
 		}
 
 		if(self.rl) self.angle+=self.rvel;
@@ -116,17 +119,18 @@ var Player = function(sid) {
 		var yin = oywz ? ((oy-oyr < wth/2) ? 0 : 1) : ((self.y-syr<wth/2) ? 0 : 1);
 
 		if(xwz&&!oxwz&&ywz&&!oywz) {
-			//finish
-        	if((locwalls[oyr+yin-1]!=null && locwalls[oyr+yin-1][oxr+xin][0][0]!=0) || 
-                locwalls[oyr+yin][oxr+xin][0][0]!=0 ||
-                locwalls[oyr+yin][oxr+2*xin-1][1][0]!=0) {
-                self.x = (self.x<ox) ? oxr+wth/2 : oxr+1-wth/2;
-            }
-            if((locwalls[oyr+yin][oxr+xin-1]!=null && locwalls[oyr+yin][oxr+xin-1][1][0]!=0) || 
-                locwalls[oyr+yin][oxr+xin][1][0]!=0 ||
-                locwalls[oyr+2*yin-1][oxr+xin][0][0]!=0) {
-                self.y = (self.y<oy) ? oyr+wth/2 : oyr+1-wth/2;
-            }
+			if(locwalls[oyr][oxr+xin][0][0]!=0 && locwalls[oyr+yin][oxr][1][0]!=0) {
+				self.x = (self.x<ox) ? oxr+wth/2 : oxr+1-wth/2;
+				self.y = (self.y<oy) ? oyr+wth/2 : oyr+1-wth/2;
+			} else if(locwalls[oyr][oxr+xin][0][0]!=0) {
+				self.x = (self.x<ox) ? oxr+wth/2 : oxr+1-wth/2;
+			} else if(locwalls[oyr+yin][oxr][1][0]!=0) {
+				self.y = (self.y<oy) ? oyr+wth/2 : oyr+1-wth/2;
+			} else if(locwalls[oyr+2*yin-1][oxr+xin][0][0]!=0){
+				self.x = (self.x<ox) ? oxr+wth/2 : oxr+1-wth/2;
+			} else if(locwalls[oyr+yin][oxr+2*xin-1][1][0]!=0) {
+				self.y = (self.y<oy) ? oyr+wth/2 : oyr+1-wth/2;
+			}
         } else if(xwz&&!oxwz&&ywz) {
             if((locwalls[oyr+yin-1]!=null && locwalls[oyr+yin-1][oxr+xin][0][0]!=0) || 
                 locwalls[oyr+yin][oxr+xin][0][0]!=0 ||

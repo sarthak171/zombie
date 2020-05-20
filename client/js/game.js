@@ -2,7 +2,7 @@
 var canvas = document.getElementById("canvas");
 var ctx = canvas.getContext('2d');
 var socket = io();
-var id, gldata, locplayer;
+var id, gldata, locplayer, lw;
 
 var size = {
   width: window.innerWidth || document.body.clientWidth,
@@ -54,9 +54,6 @@ socket.on('newPositions', function(data){
 
   if(id == null) return;
   if(data.player[id]==null) return;
-  
-  gldata = data;
-  locplayer = data.player[id];
 
   updateSize();
   canvas.width = size.width;
@@ -65,9 +62,13 @@ socket.on('newPositions', function(data){
   ctx.imageSmoothingEnabled = false;
   ctx.clearRect(0, 0, size.width, size.height);
 
+  gldata = data;
+  locplayer = data.player[id];
+  lw = size.width/10;
+
   socket.emit('keyPress',{
     inputID:'ang',
-    state: (Math.atan2((mousePos.y-size.height/2+size.width/30)/(1-locplayer.alt),(mousePos.x-size.width/2))/ Math.PI * 180-locplayer.angle+360) % 360
+    state: (Math.atan2((mousePos.y-size.height/2+size.width/30)/(1-locplayer.alt), (mousePos.x-size.width/2))/ Math.PI * 180-locplayer.angle+720) % 360
   });
 
   drawfloor(data);
@@ -78,7 +79,6 @@ socket.on('newPositions', function(data){
 function drawfloor(data) {
   var locfloor = floor[locplayer.mapId];
 
-  var lw = size.width/15;
   var radian = (locplayer.angle) / 180 * Math.PI;
   var sin = Math.sin(radian);
   var cos = Math.cos(radian);
@@ -148,7 +148,6 @@ function getWalls(data) {
   var wallvals = [];
 
   var locwalls = walls[locplayer.mapId];
-  var lw = size.width/15;
 
   var wlind1 = (locplayer.angle>180) ? 0 : 1;
   var wlind2 = (locplayer.angle>90 && locplayer.angle<270) ? 0 : 1;
@@ -312,8 +311,6 @@ function getObjects(data) {
 }
 
 function getBullets(data) {
-  var lw = size.width/15;
-
   var bulletVals = [];
   var dx, dy;
   var tr;
@@ -325,8 +322,8 @@ function getBullets(data) {
     tr = getTransition(dx, dy, locplayer.angle, locplayer.alt, lw);
     bulletVals.push([
       tr[0], tr[1],
-      1, 0, 0, 1, tr[0], tr[1]-.5*lw,
-      null, null, lw*0.2, lw*0.1, 'b', null
+      1, 0, 0, 1, tr[0]+0.02*lw, tr[1]-.5*lw+0.01*lw,
+      null, null, lw*0.04, lw*0.02, 'b', null
     ]);
   }
 
@@ -337,7 +334,6 @@ function getPlayers(data) {
   var pllocs = [];
   var dx, dy, tr, trd;
   var tplayer;
-  var lw = size.width/15;
   for(var i in data.player) {
     //add player
     tplayer = data.player[i];
