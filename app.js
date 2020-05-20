@@ -31,7 +31,7 @@ var walls = [[
 	[[[0, 0], [1, 2]], [[0, 0], [1, 2]], [[0, 0], [1, 2]], [[0, 0], [0, 0]], [[0, 0], [1, 2]], [[0, 0], [1, 2]], [[0, 0], [0, 0]]]
 ]];
 
-var wth = 0.5;
+var wth = 0.25;
 
 var SOCKET_LIST = {};
 var Player = function(sid) {
@@ -88,9 +88,11 @@ var Player = function(sid) {
 		if(self.pDown) yd++;
 		
 		if(xd!=0 && yd!=0) self.vel /=Math.sqrt(2);
+		if(self.pMouse) self.vel/=2;
 		xd*=self.vel;
 		yd*=self.vel;
 		if(xd!=0 && yd!=0) self.vel *=Math.sqrt(2);
+		if(self.pMouse) self.vel*=2;
 
 		var rad = (self.angle)*Math.PI/180;
 		self.x+=xd*Math.cos(2*Math.PI-rad);

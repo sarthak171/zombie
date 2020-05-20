@@ -33,7 +33,7 @@ var walls = [[
   [[[0, 0], [1, 2]], [[0, 0], [1, 2]], [[0, 0], [1, 2]], [[0, 0], [0, 0]], [[0, 0], [1, 2]], [[0, 0], [1, 2]], [[0, 0], [0, 0]]]
 ]];
 
-var wth = 0.5;
+var wth = 0.25;
 
 var player1img = document.getElementById("player1");
 var wall1img = document.getElementById("wall1");
@@ -68,7 +68,7 @@ socket.on('newPositions', function(data){
 
   socket.emit('keyPress',{
     inputID:'ang',
-    state: (Math.atan2((mousePos.y-size.height/2+size.width/30)/(1-locplayer.alt), (mousePos.x-size.width/2))/ Math.PI * 180-locplayer.angle+720) % 360
+    state: (Math.atan2((mousePos.y-size.height/2+lw/2)/(1-locplayer.alt), (mousePos.x-size.width/2))/ Math.PI * 180-locplayer.angle+720) % 360
   });
 
   drawfloor(data);
@@ -321,9 +321,9 @@ function getBullets(data) {
     dy = bullet.y-locplayer.y;
     tr = getTransition(dx, dy, locplayer.angle, locplayer.alt, lw);
 
-    var orad = bullet.angle*Math.PI/180;
-    var dirAng = (Math.atan2(Math.sin(orad), Math.cos(orad)/(1-locplayer.alt))*180/Math.PI+locplayer.angle+360)%360;
-    var rad = dirAng*Math.PI/180;
+    var obrad = ((bullet.angle+locplayer.angle)%360)*Math.PI/180;
+    var brad = Math.atan2(Math.sin(obrad)*(1-locplayer.alt), Math.cos(obrad));
+    var rad = (brad+2*Math.PI)%(2*Math.PI);
     var sin = Math.sin(rad);
     var cos = Math.cos(rad);
 
