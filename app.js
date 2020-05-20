@@ -107,53 +107,55 @@ var Player = function(sid) {
 		var oxr = ox | 0;
 		var oyr = oy | 0;
 
-		if(self.x<wth/2) self.x = wth/2;
-		if(self.x>locwalls[0].length-1-wth/2) self.x = locwalls[0].length-1-wth/2;
-		if(self.y<wth/2) self.y = wth/2;
-		if(self.y>locwalls.length-1-wth/2) self.y = locwalls.length-1-wth/2;
+		var pwth = wth+0.25;
 
-		var xwz = self.x-sxr < wth/2 || self.x-sxr > 1-wth/2;
-		var ywz = self.y-syr < wth/2 || self.y-syr > 1-wth/2;
-		var oxwz = ox-oxr < wth/2 || ox-oxr > 1-wth/2;
-		var oywz = oy-oyr < wth/2 || oy-oyr > 1-wth/2;
+		if(self.x<pwth/2) self.x = pwth/2;
+		if(self.x>locwalls[0].length-1-pwth/2) self.x = locwalls[0].length-1-pwth/2;
+		if(self.y<pwth/2) self.y = pwth/2;
+		if(self.y>locwalls.length-1-pwth/2) self.y = locwalls.length-1-pwth/2;
 
-		var xin = oxwz ? ((ox-oxr < wth/2) ? 0 : 1) : ((self.x-sxr<wth/2) ? 0 : 1);
-		var yin = oywz ? ((oy-oyr < wth/2) ? 0 : 1) : ((self.y-syr<wth/2) ? 0 : 1);
+		var xwz = self.x-sxr < pwth/2 || self.x-sxr > 1-pwth/2;
+		var ywz = self.y-syr < pwth/2 || self.y-syr > 1-pwth/2;
+		var oxwz = ox-oxr < pwth/2 || ox-oxr > 1-pwth/2;
+		var oywz = oy-oyr < pwth/2 || oy-oyr > 1-pwth/2;
+
+		var xin = oxwz ? ((ox-oxr < pwth/2) ? 0 : 1) : ((self.x-sxr<pwth/2) ? 0 : 1);
+		var yin = oywz ? ((oy-oyr < pwth/2) ? 0 : 1) : ((self.y-syr<pwth/2) ? 0 : 1);
 
 		if(xwz&&!oxwz&&ywz&&!oywz) {
 			if(locwalls[oyr][oxr+xin][0][0]!=0 && locwalls[oyr+yin][oxr][1][0]!=0) {
-				self.x = (self.x<ox) ? oxr+wth/2 : oxr+1-wth/2;
-				self.y = (self.y<oy) ? oyr+wth/2 : oyr+1-wth/2;
+				self.x = (self.x<ox) ? oxr+pwth/2 : oxr+1-pwth/2;
+				self.y = (self.y<oy) ? oyr+pwth/2 : oyr+1-pwth/2;
 			} else if(locwalls[oyr][oxr+xin][0][0]!=0) {
-				self.x = (self.x<ox) ? oxr+wth/2 : oxr+1-wth/2;
+				self.x = (self.x<ox) ? oxr+pwth/2 : oxr+1-pwth/2;
 			} else if(locwalls[oyr+yin][oxr][1][0]!=0) {
-				self.y = (self.y<oy) ? oyr+wth/2 : oyr+1-wth/2;
+				self.y = (self.y<oy) ? oyr+pwth/2 : oyr+1-pwth/2;
 			} else if(locwalls[oyr+2*yin-1][oxr+xin][0][0]!=0){
-				self.x = (self.x<ox) ? oxr+wth/2 : oxr+1-wth/2;
+				self.x = (self.x<ox) ? oxr+pwth/2 : oxr+1-pwth/2;
 			} else if(locwalls[oyr+yin][oxr+2*xin-1][1][0]!=0) {
-				self.y = (self.y<oy) ? oyr+wth/2 : oyr+1-wth/2;
+				self.y = (self.y<oy) ? oyr+pwth/2 : oyr+1-pwth/2;
 			}
         } else if(xwz&&!oxwz&&ywz) {
             if((locwalls[oyr+yin-1]!=null && locwalls[oyr+yin-1][oxr+xin][0][0]!=0) || 
                 locwalls[oyr+yin][oxr+xin][0][0]!=0 ||
                 locwalls[oyr+yin][oxr+2*xin-1][1][0]!=0) {
-                self.x = (self.x<ox) ? oxr+wth/2 : oxr+1-wth/2;
+                self.x = (self.x<ox) ? oxr+pwth/2 : oxr+1-pwth/2;
             }
         } else if(xwz&&ywz&&!oywz){
             if((locwalls[oyr+yin][oxr+xin-1]!=null && locwalls[oyr+yin][oxr+xin-1][1][0]!=0) || 
                 locwalls[oyr+yin][oxr+xin][1][0]!=0 ||
                 locwalls[oyr+2*yin-1][oxr+xin][0][0]!=0) {
-                self.y = (self.y<oy) ? oyr+wth/2 : oyr+1-wth/2;
+                self.y = (self.y<oy) ? oyr+pwth/2 : oyr+1-pwth/2;
             }
         } else if(xwz&&!oxwz) {
             if(locwalls[oyr][oxr+xin][0][0]!=0) {
-                self.x = (self.x<ox) ? oxr+wth/2 : oxr+1-wth/2;
+                self.x = (self.x<ox) ? oxr+pwth/2 : oxr+1-pwth/2;
             }
         } else if(ywz&&!oywz) {
             if(locwalls[oyr+yin][oxr][1][0]!=0) {
-                self.y = (self.y<oy) ? oyr+wth/2 : oyr+1-wth/2;
+                self.y = (self.y<oy) ? oyr+pwth/2 : oyr+1-pwth/2;
             }
-        }	
+		}	
 	}
 
 	Player.list[self.id] = self;
@@ -222,15 +224,62 @@ var Bullet = function(sid,ang,x,y) {
 		y:y,
 		id:sid,
 		angle:ang,
-		vel:0.2,
+		vel:0.15,
 		mapId:0
 	}
 	self.updateBul = function(){
+		var ox = self.x;
+		var oy = self.y;
 		self.x += Math.cos(self.angle/180*Math.PI)*self.vel;
 		self.y += Math.sin(self.angle/180*Math.PI)*self.vel;
 
-		if(self.x<0 || self.x>walls[self.mapId][0].length-1) delete Bullet.list[self.id];
-		else if(self.y<0 || self.y>walls[self.mapId].length-1) delete Bullet.list[self.id];
+		var locwalls = walls[self.mapId];
+
+		if(self.x<0 || self.x>locwalls[0].length-1) delete Bullet.list[self.id];
+		else if(self.y<0 || self.y>locwalls.length-1) delete Bullet.list[self.id];
+
+		var pwth = wth+0.2;
+
+		var sxr = self.x | 0;
+		var syr = self.y | 0;
+		var oxr = ox | 0;
+		var oyr = oy | 0;
+
+		var xwz = self.x-sxr < pwth/2 || self.x-sxr > 1-pwth/2;
+		var ywz = self.y-syr < pwth/2 || self.y-syr > 1-pwth/2;
+		var oxwz = ox-oxr < pwth/2 || ox-oxr > 1-pwth/2;
+		var oywz = oy-oyr < pwth/2 || oy-oyr > 1-pwth/2;
+
+		var xin = oxwz ? ((ox-oxr < pwth/2) ? 0 : 1) : ((self.x-sxr<pwth/2) ? 0 : 1);
+		var yin = oywz ? ((oy-oyr < pwth/2) ? 0 : 1) : ((self.y-syr<pwth/2) ? 0 : 1);
+
+		if(xwz&&!oxwz&&ywz&&!oywz) {
+			if(locwalls[oyr][oxr+xin][0][0]!=0 || locwalls[oyr+yin][oxr][1][0]!=0 || 
+				locwalls[oyr+2*yin-1][oxr+xin][0][0]!=0 || locwalls[oyr+yin][oxr+2*xin-1][1][0]!=0) {
+				delete Bullet.list[self.id];
+			}
+        } else if(xwz&&!oxwz&&ywz) {
+            if((locwalls[oyr+yin-1]!=null && locwalls[oyr+yin-1][oxr+xin][0][0]!=0) || 
+                locwalls[oyr+yin][oxr+xin][0][0]!=0 ||
+                locwalls[oyr+yin][oxr+2*xin-1][1][0]!=0) {
+				delete Bullet.list[self.id];
+            }
+        } else if(xwz&&ywz&&!oywz){
+            if((locwalls[oyr+yin][oxr+xin-1]!=null && locwalls[oyr+yin][oxr+xin-1][1][0]!=0) || 
+                locwalls[oyr+yin][oxr+xin][1][0]!=0 ||
+                locwalls[oyr+2*yin-1][oxr+xin][0][0]!=0) {
+				delete Bullet.list[self.id];
+            }
+        } else if(xwz&&!oxwz) {
+            if(locwalls[oyr][oxr+xin][0][0]!=0) {
+                delete Bullet.list[self.id];
+            }
+        } else if(ywz&&!oywz) {
+            if(locwalls[oyr+yin][oxr][1][0]!=0) {
+                delete Bullet.list[self.id];
+            }
+		}	
+		
 	}
 	Bullet.list[self.id] = self;
 	return self;
