@@ -320,9 +320,16 @@ function getBullets(data) {
     dx = bullet.x-locplayer.x;
     dy = bullet.y-locplayer.y;
     tr = getTransition(dx, dy, locplayer.angle, locplayer.alt, lw);
+
+    var orad = bullet.angle*Math.PI/180;
+    var dirAng = (Math.atan2(Math.sin(orad), Math.cos(orad)/(1-locplayer.alt))*180/Math.PI+locplayer.angle+360)%360;
+    var rad = dirAng*Math.PI/180;
+    var sin = Math.sin(rad);
+    var cos = Math.cos(rad);
+
     bulletVals.push([
       tr[0], tr[1],
-      1, 0, 0, 1, tr[0]+0.02*lw, tr[1]-.5*lw+0.01*lw,
+      cos, sin, -sin, cos, tr[0]+0.02*lw, tr[1]-.5*lw+0.01*lw,
       null, null, lw*0.04, lw*0.02, 'b', null
     ]);
   }
