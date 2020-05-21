@@ -58,15 +58,6 @@ var Player = function(sid) {
 		imgId:0,
 	}
 	self.updatePos = function(t){
-		if(self.pMouse){
-			self.shootBul(self.angMouse, self.x, self.y);
-		}
-
-		self.shootBul = function(angle, x, y){
-			var bul = Bullet(bulletnum,angle,x,y);
-			bulletnum++;
-		}
-
 		if(self.rl) self.angle+=self.rvel;
 		if(self.rr) self.angle-=self.rvel;
 		if(self.angle<0) self.angle+=360;
@@ -156,6 +147,17 @@ var Player = function(sid) {
                 self.y = (self.y<oy) ? oyr+pwth/2 : oyr+1-pwth/2;
             }
 		}	
+
+		if(self.pMouse){
+			nx = self.x + Math.cos(self.angMouse/180*Math.PI)*0.25;
+			ny = self.y + Math.sin(self.angMouse/180*Math.PI)*0.25;
+			self.shootBul(self.angMouse, nx, ny);
+		}
+
+		self.shootBul = function(angle, x, y){
+			var bul = Bullet(bulletnum,angle,x,y);
+			bulletnum++;
+		}
 	}
 
 	Player.list[self.id] = self;
@@ -238,48 +240,35 @@ var Bullet = function(sid,ang,x,y) {
 		if(self.x<0 || self.x>locwalls[0].length-1) delete Bullet.list[self.id];
 		else if(self.y<0 || self.y>locwalls.length-1) delete Bullet.list[self.id];
 
-		var pwth = wth+0.2;
+		var pwth = wth;
 
 		var sxr = self.x | 0;
 		var syr = self.y | 0;
 		var oxr = ox | 0;
 		var oyr = oy | 0;
 
-		var xwz = self.x-sxr < pwth/2 || self.x-sxr > 1-pwth/2;
-		var ywz = self.y-syr < pwth/2 || self.y-syr > 1-pwth/2;
-		var oxwz = ox-oxr < pwth/2 || ox-oxr > 1-pwth/2;
-		var oywz = oy-oyr < pwth/2 || oy-oyr > 1-pwth/2;
+		var xwz = self.x-sxr < pwth/2 || self.x-sxr > 1-pwth/2 || sxr!=oxr;
+		var ywz = self.y-syr < pwth/2 || self.y-syr > 1-pwth/2 || syr!=oyr;
 
-		var xin = oxwz ? ((ox-oxr < pwth/2) ? 0 : 1) : ((self.x-sxr<pwth/2) ? 0 : 1);
-		var yin = oywz ? ((oy-oyr < pwth/2) ? 0 : 1) : ((self.y-syr<pwth/2) ? 0 : 1);
+		var xin = (ox-oxr < .5) ? 0 : 1;
+		var yin = (oy-oyr < .5) ? 0 : 1;
 
-		if(xwz&&!oxwz&&ywz&&!oywz) {
-			if(locwalls[oyr][oxr+xin][0][0]!=0 || locwalls[oyr+yin][oxr][1][0]!=0 || 
-				locwalls[oyr+2*yin-1][oxr+xin][0][0]!=0 || locwalls[oyr+yin][oxr+2*xin-1][1][0]!=0) {
+		if(xwz && ywz) {
+			if((locwalls[oyr][oxr+xin]!=null && locwalls[oyr][oxr+xin][0][0]) || 
+			   	(locwalls[oyr+yin]!=null && locwalls[oyr+yin][oxr][1][0]) ||
+			   	(locwalls[oyr+2*yin-1]!=null && locwalls[oyr+2*yin-1][oxr+xin]!=null && locwalls[oyr+2*yin-1][oxr+xin][0][0]) ||
+			   	(locwalls[oyr+yin]!=null && locwalls[oyr+yin][oxr+2*xin-1]!=null && locwalls[oyr+yin][oxr+2*xin-1][1][0])) {
 				delete Bullet.list[self.id];
 			}
-        } else if(xwz&&!oxwz&&ywz) {
-            if((locwalls[oyr+yin-1]!=null && locwalls[oyr+yin-1][oxr+xin][0][0]!=0) || 
-                locwalls[oyr+yin][oxr+xin][0][0]!=0 ||
-                locwalls[oyr+yin][oxr+2*xin-1][1][0]!=0) {
+		} else if(xwz) {
+			if(locwalls[oyr][oxr+xin]!=null && locwalls[oyr][oxr+xin][0][0]) {
 				delete Bullet.list[self.id];
-            }
-        } else if(xwz&&ywz&&!oywz){
-            if((locwalls[oyr+yin][oxr+xin-1]!=null && locwalls[oyr+yin][oxr+xin-1][1][0]!=0) || 
-                locwalls[oyr+yin][oxr+xin][1][0]!=0 ||
-                locwalls[oyr+2*yin-1][oxr+xin][0][0]!=0) {
+			}
+		} else if(ywz) {
+			if(locwalls[oyr+yin]!=null && locwalls[oyr+yin][oxr][1][0]) {
 				delete Bullet.list[self.id];
-            }
-        } else if(xwz&&!oxwz) {
-            if(locwalls[oyr][oxr+xin][0][0]!=0) {
-                delete Bullet.list[self.id];
-            }
-        } else if(ywz&&!oywz) {
-            if(locwalls[oyr+yin][oxr][1][0]!=0) {
-                delete Bullet.list[self.id];
-            }
-		}	
-		
+			}
+		}
 	}
 	Bullet.list[self.id] = self;
 	return self;
