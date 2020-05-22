@@ -381,21 +381,20 @@ function getPlayers(data) {
   var dx, dy, tr, trd;
   var tplayer;
   
-  var gunh;
-  var gunw;
-  var handh;
-  var handw;
-  var whratio;
-  var rpratio;
-  var sin;
-  var cos;
+  var gunh, gunw;
+  var handh, handw;
+  var whratio, rpratio;
+  var atprad, atpang, tpang;
+  var sin, cos;
   
   var handwidths = [0.15];
   var handheights = [0.6];
   
-  var flip = 1;
-  var playerimgId = 0;
-  var gunimgId = 0;
+  var flip;
+  var playerimgId, gunimgId;
+
+  var altskew = 1;
+  var shift = lw/6;
   
   //Player, Gun, FrontHand, BackHand
   var drawOrder = [0.01, 0.02, 0, 0.03];
@@ -408,56 +407,24 @@ function getPlayers(data) {
     tr = getTransition((tplayer.x | 0)+0.5-locplayer.x, (tplayer.y | 0)+0.5-locplayer.y, locplayer.angle, locplayer.alt, lw);
     trd = getTransition(dx, dy, locplayer.angle, locplayer.alt, lw);
     
-    var tprad = (tplayer.angMouse+locplayer.angle)*Math.PI/180;
-    var tpang = (Math.atan2(Math.sin(tprad)*(1-locplayer.alt), Math.cos(tprad))*180/Math.PI+360)%360;
+    atprad = (tplayer.angMouse+locplayer.angle)*Math.PI/180;
+    atpang = (Math.atan2(Math.sin(atprad)*(1-locplayer.alt), Math.cos(atprad))*180/Math.PI+360)%360;
+    tpang = ((atpang >= 135) && (atpang <= 225)) ? -1*(atpang-180) : atpang;
+    sin = Math.sin(tpang/180*Math.PI);
+    cos = Math.cos(tpang/180*Math.PI);
+    
+    flip = (tpang==atpang) ? 1 : -1;
+    playerimgId = ((atpang > 225 ) && (atpang < 315)) ? 1 : (((atpang > 45) && (atpang<135)) ? 2 : 0);
+    gunimgId = (((atpang >= 315) || (atpang <= 45)) || ((atpang >= 135) && (atpang <= 225))) ? 0 : 1;
+    drawOrder = ((atpang >= 315) || (atpang <= 45)) ? [0.01, 0.02, 0, 0.03] :
+                ((atpang >= 135) && (atpang <= 225)) ? [0.01, 0.02, 0, 0.03] :
+                ((atpang > 225 ) && (atpang < 315)) ? [0.03, 0.02, 0.01, 0] : [0, 0.03, 0.01, 0.02];
 
-
-
-    var altskew = 1;
-    var shift = lw/6;
-    //Right
-    if((tpang >= 315) || (tpang <= 45)) {
-      flip = 1;
-      cos = Math.cos(tpang /180 * Math.PI);
-      sin = Math.sin(tpang /180 * Math.PI);
-      playerimgId = 0;
-      gunimgId = 0;
-      drawOrder = [0.01, 0.02, 0, 0.03];
-    }
-    //Left
-    else if((tpang >= 135) && (tpang <= 225)) {
-      flip = -1;
-      cos = Math.cos(-1*(tpang-180) /180 * Math.PI);
-      sin = Math.sin(-1*(tpang-180) /180 * Math.PI);
-      playerimgId = 0;
-      gunimgId = 0;
-      drawOrder = [0.01, 0.02, 0, 0.03];
-    }
-    //Up
-    else if((tpang > 225 ) && (tpang < 315)) {
-      flip = 1;
-      cos = Math.cos(tpang /180 * Math.PI);
-      sin = Math.sin(tpang /180 * Math.PI);
-      playerimgId = 1;
-      gunimgId = 1;
-      drawOrder = [0.03, 0.02, 0.01, 0];
-      
-    }
-    //Down WIP
-    else {
-      flip = 1;
-      cos = Math.cos(tpang /180 * Math.PI);
-      sin = Math.sin(tpang /180 * Math.PI);
-      playerimgId = 2;
-      gunimgId = 1;
-      drawOrder = [0, 0.03, 0.01, 0.02];
-    }
-
-      pllocs.push([
-        tr[0], tr[1]+drawOrder[0], 
-        flip*1, 0, 0, 1, trd[0], trd[1]-lw*.5, 
-        0, 1, lw*0.3, lw, 'p', playerimgId
-      ]);
+    pllocs.push([
+      tr[0], tr[1]+drawOrder[0], 
+      flip*1, 0, 0, 1, trd[0], trd[1]-lw*.5, 
+      0, 1, lw*0.3, lw, 'p', playerimgId
+    ]);
     
     gunh = gunimgs[gunimgId].naturalHeight;
     gunw = gunimgs[gunimgId].naturalWidth;
@@ -467,23 +434,22 @@ function getPlayers(data) {
     rpratio = gunw/gunimgs[gunimgId].naturalWidth;
     
     pllocs.push([
-        tr[0], tr[1]+drawOrder[1], 
-        flip*cos, sin*altskew, flip*-sin, cos*altskew, trd[0]+cos*shift*flip, trd[1]-lw*handheights[0]+sin*shift, 
-        0, 1, gunw, gunh, 'g', gunimgId
-      ]);
+      tr[0], tr[1]+drawOrder[1], 
+      flip*cos, sin*altskew, flip*-sin, cos*altskew, trd[0]+cos*shift*flip, trd[1]-lw*handheights[0]+sin*shift, 
+      0, 1, gunw, gunh, 'g', gunimgId
+    ]);
+
+    handh = handimgs[playerimgId + Math.min(playerimgId, 1)].naturalHeight*rpratio;
+    handw = handimgs[playerimgId + Math.min(playerimgId, 1)].naturalWidth*rpratio;
+
+    pllocs.push([
+      tr[0], tr[1]+drawOrder[2], 
+      flip*cos, sin*altskew, flip*-sin, cos*altskew, trd[0]+cos*shift*flip, trd[1]-lw*handheights[0]+sin*shift, 
+      0, 1, handw, handh, 'h', playerimgId + Math.min(playerimgId, 1)
+    ]);
     
     //Left or Right
     if(playerimgId === 0) {
-    
-      handh = handimgs[0].naturalHeight*rpratio;
-      handw = handimgs[0].naturalWidth*rpratio;
-      
-      pllocs.push([
-        tr[0], tr[1]+drawOrder[2], 
-        flip*cos, sin*altskew, flip*-sin, cos*altskew, trd[0]+cos*shift*flip, trd[1]-lw*handheights[0]+sin*shift, 
-        0, 1, handw, handh, 'h', 0
-      ]);
-      
       handh = handimgs[1].naturalHeight*rpratio;
       handw = handimgs[1].naturalWidth*rpratio;
       
@@ -493,31 +459,6 @@ function getPlayers(data) {
         0, 1, handw, handh, 'h', 1
       ]);
     }
-    
-    //Up
-    if(playerimgId === 1) {
-      handh = handimgs[2].naturalHeight*rpratio;
-      handw = handimgs[2].naturalWidth*rpratio;
-      
-      pllocs.push([
-        tr[0], tr[1]+drawOrder[2], 
-        flip*cos, sin*altskew, flip*-sin, cos*altskew, trd[0]+cos*shift*flip, trd[1]-lw*handheights[0]+sin*shift, 
-        0, 1, handw, handh, 'h', 2
-      ]);
-    }
-    
-    //Down
-    if(playerimgId === 2) {
-      handh = handimgs[3].naturalHeight*rpratio;
-      handw = handimgs[3].naturalWidth*rpratio;
-      
-      pllocs.push([
-        tr[0], tr[1]+drawOrder[2], 
-        flip*cos, sin*altskew, flip*-sin, cos*altskew, trd[0]+cos*shift*flip, trd[1]-lw*handheights[0]+sin*shift, 
-        0, 1, handw, handh, 'h', 3
-      ]);
-    }
-	
   }
   return pllocs;
 }
