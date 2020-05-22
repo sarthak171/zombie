@@ -253,7 +253,7 @@ var Bullet = function(sid,ang,x,y) {
 		angle:ang,
 		vel:0.15,
 		mapId:0,
-		damage
+		damage:20
 	}
 	self.updateBul = function(){
 		var ox = self.x;
