@@ -73,6 +73,7 @@ socket.on('newPositions', function(data){
   if(id == null) return;
   if(data.player[id]==null) return;
 
+  console.log(data.zombie)
   updateSize();
   canvas.width = size.width;
   canvas.height = size.height;

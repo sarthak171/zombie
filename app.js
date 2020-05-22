@@ -219,6 +219,31 @@ Player.update = function(){
 	return Player.list;
 }
 
+var Zombie = function(sid,x,y){
+	var self = {
+		x:x,
+		y:y,
+		vel:.1,
+		health:100,
+		id:sid
+	}
+	self.updateZomb = function(){
+		var ox = self.x;
+		var oy = self.y;
+		self.x += Math.cos(self.angle/180*Math.PI)*self.vel;
+		self.y += Math.sin(self.angle/180*Math.PI)*self.vel;
+	}
+	Zombie.list[self.id] = self;
+	return self;
+}
+Zombie.list = {};
+zcnt = 0
+Zombie.update = function(){
+	for(var i in Zombie.list){
+		Zombie.list[i].updateZomb();
+	}
+	return Zombie.list;
+}
 
 var Bullet = function(sid,ang,x,y) {
 	var self = {
@@ -227,7 +252,8 @@ var Bullet = function(sid,ang,x,y) {
 		id:sid,
 		angle:ang,
 		vel:0.15,
-		mapId:0
+		mapId:0,
+		damage
 	}
 	self.updateBul = function(){
 		var ox = self.x;
@@ -292,6 +318,10 @@ io.sockets.on('connection', function(socket){
 
 	var data = [socket.id];
 	SOCKET_LIST[socket.id].emit('initial', data);
+	for(var i =0; i<5;i++){
+		zcnt+=1
+		Zombie(zcnt,1,1)
+	}
 
 
 	socket.on('disconnect',function(){
@@ -307,6 +337,7 @@ setInterval(function(){
 	var pack = {
 		player:Player.update(),
 		bullet:Bullet.update(),
+		zombie:Zombie.update()
 	}
 	pack = JSON.stringify(pack);
 	for(var i in SOCKET_LIST){
