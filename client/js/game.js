@@ -36,8 +36,15 @@ var walls = [[
 var wth = 0.25;
 
 var player1sideimg = document.getElementById("player1side");
+var player1sidemove1img = document.getElementById("player1sidemove1");
+var player1sidemove2img = document.getElementById("player1sidemove2");
 var player1backimg = document.getElementById("player1back");
+var player1backmove1img = document.getElementById("player1backmove1");
+var player1backmove2img = document.getElementById("player1backmove2");
 var player1frontimg = document.getElementById("player1front");
+var player1frontmove1img = document.getElementById("player1frontmove1");
+var player1frontmove2img = document.getElementById("player1frontmove2");
+
 var wall1img = document.getElementById("wall1");
 var wall2img = document.getElementById("wall2");
 var floor1img = document.getElementById("floor1");
@@ -49,8 +56,14 @@ var forwardmediumimg = document.getElementById("forwardmedium");
 var backwardmediumimg = document.getElementById("backwardmedium");
 
 document.getElementById("player1side").style.display = "none";
+document.getElementById("player1sidemove1").style.display = "none";
+document.getElementById("player1sidemove2").style.display = "none";
 document.getElementById("player1back").style.display = "none";
+document.getElementById("player1backmove1").style.display = "none";
+document.getElementById("player1backmove2").style.display = "none";
 document.getElementById("player1front").style.display = "none";
+document.getElementById("player1frontmove1").style.display = "none";
+document.getElementById("player1frontmove2").style.display = "none";
 document.getElementById("wall1").style.display = "none";
 document.getElementById("wall2").style.display = "none";
 document.getElementById("floor1").style.display = "none";
@@ -61,7 +74,10 @@ document.getElementById("frontmedium").style.display = "none";
 document.getElementById("forwardmedium").style.display = "none";
 document.getElementById("backwardmedium").style.display = "none";
 
-var playerimgs = [player1sideimg, player1backimg, player1frontimg];
+var playerimgs = [player1sideimg, player1backimg, player1frontimg, 
+                  player1sidemove1img, player1backmove1img, player1frontmove1img, 
+                  player1sidemove2img, player1backmove2img , player1frontmove2img];
+
 var gunimgs = [uzisideimg, uzitopimg];
 var floorimgs = [floor1img];
 var wallimgs = [null, wall1img, wall2img];
@@ -73,7 +89,6 @@ socket.on('newPositions', function(data){
   if(id == null) return;
   if(data.player[id]==null) return;
 
-  console.log(data.zombie)
   updateSize();
   canvas.width = size.width;
   canvas.height = size.height;
@@ -420,10 +435,13 @@ function getPlayers(data) {
                 ((atpang >= 135) && (atpang <= 225)) ? [0.01, 0.02, 0, 0.03] :
                 ((atpang > 225 ) && (atpang < 315)) ? [0.03, 0.02, 0.01, 0] : [0, 0.03, 0.01, 0.02];
 
+    widthratio = (lw*0.3)/15;
+    playerwidth = playerimgs[playerimgId+tplayer.moveId].naturalWidth*widthratio;
+    
     pllocs.push([
       tr[0], tr[1]+drawOrder[0], 
       flip*1, 0, 0, 1, trd[0], trd[1]-lw*.5, 
-      0, 1, lw*0.3, lw, 'p', playerimgId
+      0, 1, playerwidth, lw, 'p', playerimgId+tplayer.moveId
     ]);
     
     gunh = gunimgs[gunimgId].naturalHeight;

@@ -49,13 +49,14 @@ var Player = function(sid) {
 		rr:false,
 		au:false,
 		ad:false,
-		vel:0.1,
+		vel:0.06,
 		rvel:3.5,
 		avel:.01,
 		angle:0,
 		alt:0.8,
 		mapId:0,
 		imgId:0,
+		moveId:0,
 	}
 	self.updatePos = function(t){
 		if(self.rl) self.angle+=self.rvel;
@@ -158,6 +159,17 @@ var Player = function(sid) {
 			var bul = Bullet(bulletnum,angle,x,y);
 			bulletnum++;
 		}
+
+		self.moveId = 0;
+		var d = new Date();
+		var n = d.getTime();
+		var moving = self.pDown || self.pUp || self.pLeft || self.pRight;
+		var walkspeed = 150;
+		
+		if(moving && n%(walkspeed*4)<=walkspeed) self.moveId=3;
+		else if(moving && n%(walkspeed*4)<=walkspeed*2) self.moveId=0;
+		else if(moving && n%(walkspeed*4)<=walkspeed*3) self.moveId=6;
+		else if(moving) self.moveId = 0;
 	}
 
 	Player.list[self.id] = self;
