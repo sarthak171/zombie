@@ -235,21 +235,88 @@ var Zombie = function(sid,x,y){
 	var self = {
 		x:x,
 		y:y,
-		vel:.1,
+		vel:.01,
 		health:100,
-		id:sid
+		id:sid,
+		mapId:0,
+		imgId:0,
+		moveId:0
 	}
 	self.updateZomb = function(){
 		var ox = self.x;
 		var oy = self.y;
-		self.x += Math.cos(self.angle/180*Math.PI)*self.vel;
-		self.y += Math.sin(self.angle/180*Math.PI)*self.vel;
+
+		var angle = self.getAngle();
+		self.x += Math.cos(angle/180*Math.PI)*self.vel;
+		self.y += Math.sin(angle/180*Math.PI)*self.vel;
+
+		var locwalls = walls[self.mapId];
+
+		var sxr = self.x | 0;
+		var syr = self.y | 0;
+		var oxr = ox | 0;
+		var oyr = oy | 0;
+
+		var pwth = wth+0.25;
+
+		if(self.x<pwth/2) self.x = pwth/2;
+		if(self.x>locwalls[0].length-1-pwth/2) self.x = locwalls[0].length-1-pwth/2;
+		if(self.y<pwth/2) self.y = pwth/2;
+		if(self.y>locwalls.length-1-pwth/2) self.y = locwalls.length-1-pwth/2;
+
+		var xwz = self.x-sxr < pwth/2 || self.x-sxr > 1-pwth/2;
+		var ywz = self.y-syr < pwth/2 || self.y-syr > 1-pwth/2;
+		var oxwz = ox-oxr < pwth/2 || ox-oxr > 1-pwth/2;
+		var oywz = oy-oyr < pwth/2 || oy-oyr > 1-pwth/2;
+
+		var xin = oxwz ? ((ox-oxr < pwth/2) ? 0 : 1) : ((self.x-sxr<pwth/2) ? 0 : 1);
+		var yin = oywz ? ((oy-oyr < pwth/2) ? 0 : 1) : ((self.y-syr<pwth/2) ? 0 : 1);
+
+		if(xwz&&!oxwz&&ywz&&!oywz) {
+			if(locwalls[oyr][oxr+xin][0][0]!=0 && locwalls[oyr+yin][oxr][1][0]!=0) {
+				self.x = (self.x<ox) ? oxr+pwth/2 : oxr+1-pwth/2;
+				self.y = (self.y<oy) ? oyr+pwth/2 : oyr+1-pwth/2;
+			} else if(locwalls[oyr][oxr+xin][0][0]!=0) {
+				self.x = (self.x<ox) ? oxr+pwth/2 : oxr+1-pwth/2;
+			} else if(locwalls[oyr+yin][oxr][1][0]!=0) {
+				self.y = (self.y<oy) ? oyr+pwth/2 : oyr+1-pwth/2;
+			} else if(locwalls[oyr+2*yin-1][oxr+xin][0][0]!=0){
+				self.x = (self.x<ox) ? oxr+pwth/2 : oxr+1-pwth/2;
+			} else if(locwalls[oyr+yin][oxr+2*xin-1][1][0]!=0) {
+				self.y = (self.y<oy) ? oyr+pwth/2 : oyr+1-pwth/2;
+			}
+        } else if(xwz&&!oxwz&&ywz) {
+            if((locwalls[oyr+yin-1]!=null && locwalls[oyr+yin-1][oxr+xin][0][0]!=0) || 
+                locwalls[oyr+yin][oxr+xin][0][0]!=0 ||
+                locwalls[oyr+yin][oxr+2*xin-1][1][0]!=0) {
+                self.x = (self.x<ox) ? oxr+pwth/2 : oxr+1-pwth/2;
+            }
+        } else if(xwz&&ywz&&!oywz){
+            if((locwalls[oyr+yin][oxr+xin-1]!=null && locwalls[oyr+yin][oxr+xin-1][1][0]!=0) || 
+                locwalls[oyr+yin][oxr+xin][1][0]!=0 ||
+                locwalls[oyr+2*yin-1][oxr+xin][0][0]!=0) {
+                self.y = (self.y<oy) ? oyr+pwth/2 : oyr+1-pwth/2;
+            }
+        } else if(xwz&&!oxwz) {
+            if(locwalls[oyr][oxr+xin][0][0]!=0) {
+                self.x = (self.x<ox) ? oxr+pwth/2 : oxr+1-pwth/2;
+            }
+        } else if(ywz&&!oywz) {
+            if(locwalls[oyr+yin][oxr][1][0]!=0) {
+                self.y = (self.y<oy) ? oyr+pwth/2 : oyr+1-pwth/2;
+            }
+		}
+	}
+	self.getAngle = function() {
+		//complete
+		return 45;
 	}
 	Zombie.list[self.id] = self;
 	return self;
 }
+
 Zombie.list = {};
-zcnt = 0
+zcnt = 0;
 Zombie.update = function(){
 	for(var i in Zombie.list){
 		Zombie.list[i].updateZomb();

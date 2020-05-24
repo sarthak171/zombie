@@ -55,6 +55,8 @@ var frontmediumimg = document.getElementById("frontmedium");
 var forwardmediumimg = document.getElementById("forwardmedium");
 var backwardmediumimg = document.getElementById("backwardmedium");
 
+var zombie1img = document.getElementById("zombie1");
+
 document.getElementById("player1side").style.display = "none";
 document.getElementById("player1sidemove1").style.display = "none";
 document.getElementById("player1sidemove2").style.display = "none";
@@ -73,6 +75,7 @@ document.getElementById("backmedium").style.display = "none";
 document.getElementById("frontmedium").style.display = "none";
 document.getElementById("forwardmedium").style.display = "none";
 document.getElementById("backwardmedium").style.display = "none";
+document.getElementById("zombie1").style.display = "none";
 
 var playerimgs = [player1sideimg, player1backimg, player1frontimg, 
                   player1sidemove1img, player1backmove1img, player1frontmove1img, 
@@ -82,6 +85,7 @@ var gunimgs = [uzisideimg, uzitopimg];
 var floorimgs = [floor1img];
 var wallimgs = [null, wall1img, wall2img];
 var handimgs = [backmediumimg,frontmediumimg, backwardmediumimg, forwardmediumimg];
+var zombieimgs = [zombie1img];
 
 socket.on('newPositions', function(data){
   data = JSON.parse(data);
@@ -141,6 +145,7 @@ function drawObj(data) {
   Array.prototype.push.apply(objvals, getWalls(data));
   Array.prototype.push.apply(objvals, getObjects(data));
   Array.prototype.push.apply(objvals, getPlayers(data));
+  Array.prototype.push.apply(objvals, getZombies(data));
 
   var objinds = [];
   for(var i=0; i<objvals.length; i++) {
@@ -166,6 +171,8 @@ function drawObj(data) {
 		    break;
       case 'w': dimg = wallimgs[dobj[13]];
         break;
+      case 'z': dimg = zombieimgs[dobj[13]];
+      break;
       default: isImg = false;
         break;
     }
@@ -479,6 +486,28 @@ function getPlayers(data) {
     }
   }
   return pllocs;
+}
+
+function getZombies(data) {
+  var pllocs = [];
+  var dx, dy, tr, trd;
+  var tzombie;
+
+  for(var i in data.zombie) {
+    console.log(i);
+    tzombie = data.zombie[i];
+    dx = tzombie.x-locplayer.x;
+    dy = tzombie.y-locplayer.y;
+    tr = getTransition((tzombie.x | 0)+0.5-locplayer.x, (tzombie.y | 0)+0.5-locplayer.y, locplayer.angle, locplayer.alt, lw);
+    trd = getTransition(dx, dy, locplayer.angle, locplayer.alt, lw);
+
+    pllocs.push([
+      tr[0], tr[1], 
+      1, 0, 0, 1, trd[0], trd[1]-lw*.5, 
+      0, 1, lw*.6, lw, 'z', 0
+    ]);
+  }
+  return pllocs
 }
 
 function getTransition(dx, dy, angle, alt, lw) {
