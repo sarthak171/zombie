@@ -2,17 +2,15 @@
 var canvas = document.getElementById("canvas");
 var ctx = canvas.getContext('2d');
 var socket = io();
-var id, gldata, locplayer, lw;
+var id, locplayer;
+var lw;
 
 var size = {
   width: window.innerWidth || document.body.clientWidth,
   height: window.innerHeight || document.body.clientHeight
 }
 
-var mousePos = {
-  x: 0,
-  y: 0
-}
+var mousePos = {x:0, y:0};
 
 var floor = [[
   [0,0,0,0,0,0],
@@ -87,32 +85,31 @@ var wallimgs = [null, wall1img, wall2img];
 var handimgs = [backmediumimg,frontmediumimg, backwardmediumimg, forwardmediumimg];
 var zombieimgs = [zombie1img];
 
-socket.on('newPositions', function(data){
-  data = JSON.parse(data);
+socket.on('newPositions', function(pack){
+  data = JSON.parse(pack);
+  gldata = data;
 
   if(id == null) return;
-  if(data.player[id]==null) return;
 
+  updateScreen();
+  draw(data);
+});
+
+function updateScreen() {
   updateSize();
   canvas.width = size.width;
   canvas.height = size.height;
+  lw = size.width/10;
+}
+
+function draw(data) {
   ctx = canvas.getContext('2d');
   ctx.imageSmoothingEnabled = false;
   ctx.clearRect(0, 0, size.width, size.height);
 
-  gldata = data;
-  locplayer = data.player[id];
-  lw = size.width/10;
-
-  socket.emit('keyPress',{
-    inputID:'ang',
-    state: (Math.atan2((mousePos.y-size.height/2+0.6*lw)/(1-locplayer.alt), (mousePos.x-size.width/2))/ Math.PI * 180-locplayer.angle+720) % 360
-  });
-
   drawfloor(data);
   drawObj(data);
-});
-
+}
 
 function drawfloor(data) {
   var locfloor = floor[locplayer.mapId];
@@ -376,23 +373,27 @@ function getBullets(data) {
   var dx, dy;
   var tr;
 
-  for(i in data.bullet) {
-    var bullet = data.bullet[i];
-    dx = bullet.x-locplayer.x;
-    dy = bullet.y-locplayer.y;
-    tr = getTransition(dx, dy, locplayer.angle, locplayer.alt, lw);
+  for(i in data.player) {
+    var tplayer = data.player[i];
+    if(i==id) tplayer = locplayer;
+    for(j in tplayer.bullets) {
+      var bullet = tplayer.bullets[j];
+      dx = bullet.x-locplayer.x;
+      dy = bullet.y-locplayer.y;
+      tr = getTransition(dx, dy, locplayer.angle, locplayer.alt, lw);
 
-    var obrad = ((bullet.angle+locplayer.angle)%360)*Math.PI/180;
-    var brad = Math.atan2(Math.sin(obrad)*(1-locplayer.alt), Math.cos(obrad));
-    var rad = (brad+2*Math.PI)%(2*Math.PI);
-    var sin = Math.sin(rad);
-    var cos = Math.cos(rad);
+      var obrad = ((bullet.angle+locplayer.angle)%360)*Math.PI/180;
+      var brad = Math.atan2(Math.sin(obrad)*(1-locplayer.alt), Math.cos(obrad));
+      var rad = (brad+2*Math.PI)%(2*Math.PI);
+      var sin = Math.sin(rad);
+      var cos = Math.cos(rad);
 
-    bulletVals.push([
-      tr[0], tr[1],
-      cos, sin, -sin, cos, tr[0]+0.01*lw, tr[1]-.6*lw+0.005*lw,
-      null, null, lw*0.02, lw*0.01, 'b', null
-    ]);
+      bulletVals.push([
+        tr[0], tr[1],
+        cos, sin, -sin, cos, tr[0]+0.01*lw, tr[1]-.6*lw+0.005*lw,
+        null, null, lw*0.02, lw*0.01, 'b', null
+      ]);
+    }
   }
 
   return bulletVals;
@@ -424,12 +425,13 @@ function getPlayers(data) {
   for(var i in data.player) {
     //add player
     tplayer = data.player[i];
+    if(i==locplayer.id) tplayer = locplayer;
     dx = tplayer.x-locplayer.x;
     dy = tplayer.y-locplayer.y;
     tr = getTransition((tplayer.x | 0)+0.5-locplayer.x, (tplayer.y | 0)+0.5-locplayer.y, locplayer.angle, locplayer.alt, lw);
     trd = getTransition(dx, dy, locplayer.angle, locplayer.alt, lw);
     
-    atprad = (tplayer.angMouse+locplayer.angle)*Math.PI/180;
+    atprad = (tplayer.mouseAngle+locplayer.angle)*Math.PI/180;
     atpang = (Math.atan2(Math.sin(atprad)*(1-locplayer.alt), Math.cos(atprad))*180/Math.PI+360)%360;
     tpang = ((atpang >= 135) && (atpang <= 225)) ? -1*(atpang-180) : atpang;
     sin = Math.sin(tpang/180*Math.PI);
@@ -494,7 +496,6 @@ function getZombies(data) {
   var tzombie;
 
   for(var i in data.zombie) {
-    console.log(i);
     tzombie = data.zombie[i];
     dx = tzombie.x-locplayer.x;
     dy = tzombie.y-locplayer.y;
@@ -518,9 +519,6 @@ function getTransition(dx, dy, angle, alt, lw) {
   return [xc, yc];
 }
 
-function degs_to_rads (degs) { return degs / (180/Math.PI); }
-function rads_to_degs (rads) { return rads * (180/Math.PI); }
-
 function updateSize() {
   size = {
     width: window.innerWidth || document.body.clientWidth,
@@ -528,62 +526,290 @@ function updateSize() {
   }
 }
 
-socket.on('initial', function(data) {
-  id = data[0];
+socket.on('initial', function(pack) {
+  data = JSON.parse(pack);
+  id = data.id;
+  locplayer = data.player;
 });
 
 document.onkeydown = function(event){
-  if(event.keyCode === 68)
-    socket.emit('keyPress', {inputID:'r',state:true});
-  if(event.keyCode === 83)
-    socket.emit('keyPress', {inputID:'d',state:true});
-  if(event.keyCode === 65)
-    socket.emit('keyPress', {inputID:'l',state:true});
-  if(event.keyCode === 87)
-    socket.emit('keyPress', {inputID:'u',state:true});
-  if(event.keyCode === 81)
-    socket.emit('keyPress', {inputID:'rl',state:true});
-  if(event.keyCode === 69)
-    socket.emit('keyPress', {inputID:'rr',state:true});
-  if(event.keyCode === 38)
-    socket.emit('keyPress', {inputID:'au',state:true});
-  if(event.keyCode === 40)
-    socket.emit('keyPress', {inputID:'ad',state:true});
+  if(event.keyCode === 68) locplayer.playerRight = true;
+  if(event.keyCode === 83) locplayer.playerDown = true;
+  if(event.keyCode === 65) locplayer.playerLeft = true;
+  if(event.keyCode === 87) locplayer.playerUp = true;
+  if(event.keyCode === 81) locplayer.rotateLeft = true;
+  if(event.keyCode === 69) locplayer.rotateRight = true;
+  if(event.keyCode === 38) locplayer.altUp = true;
+  if(event.keyCode === 40) locplayer.altDown = true;
 }
+
 document.onkeyup = function(event){
-  if(event.keyCode === 68)
-    socket.emit('keyPress', {inputID:'r',state:false});
-  if(event.keyCode === 83)
-    socket.emit('keyPress', {inputID:'d',state:false});
-  if(event.keyCode === 65)
-    socket.emit('keyPress', {inputID:'l',state:false});
-  if(event.keyCode === 87)
-    socket.emit('keyPress', {inputID:'u',state:false});
-  if(event.keyCode === 81)
-    socket.emit('keyPress', {inputID:'rl',state:false});
-  if(event.keyCode === 69)
-    socket.emit('keyPress', {inputID:'rr',state:false});
-  if(event.keyCode === 38)
-    socket.emit('keyPress', {inputID:'au',state:false});
-  if(event.keyCode === 40)
-    socket.emit('keyPress', {inputID:'ad',state:false});
+  if(event.keyCode === 68) locplayer.playerRight = false;
+  if(event.keyCode === 83) locplayer.playerDown = false;
+  if(event.keyCode === 65) locplayer.playerLeft = false;
+  if(event.keyCode === 87) locplayer.playerUp = false;
+  if(event.keyCode === 81) locplayer.rotateLeft = false;
+  if(event.keyCode === 69) locplayer.rotateRight = false;
+  if(event.keyCode === 38) locplayer.altUp = false;
+  if(event.keyCode === 40) locplayer.altDown = false;
 }
 
 document.onmousedown = function(event){
-  socket.emit('keyPress',{
-    inputID:'fire',
-    state:true,
-  });
+  locplayer.mouseDown = true;
 }
 
 document.onmouseup = function(event) {
-  socket.emit('keyPress',{
-    inputID:'fire',
-    state:false,
-  });
+  locplayer.mouseDown = false;
 }
 
 document.onmousemove = function(event){
   mousePos.x = event.clientX;
   mousePos.y = event.clientY;
 }
+
+function updateLocs() {
+  updatePlayer();
+  updateBullets();
+}
+
+function updatePlayer() {
+  updateMouseAngle();
+
+  if(locplayer.rotateLeft) locplayer.angle+=locplayer.rotateVel;
+	if(locplayer.rotateRight) locplayer.angle-=locplayer.rotateVel;
+	if(locplayer.angle<0) locplayer.angle+=360;
+	if(locplayer.angle>=360) locplayer.angle-=360;
+
+	if(locplayer.altUp) locplayer.alt-=locplayer.altVel;
+	if(locplayer.altDown) locplayer.alt+=locplayer.altVel;
+	if(locplayer.alt<0) locplayer.alt=0;
+	if(locplayer.alt>0.9) locplayer.alt=0.9;
+
+	var ox = locplayer.x;
+	var oy = locplayer.y;
+	var xd = 0;
+	var yd = 0;
+
+	if(locplayer.playerRight) xd++;
+	if(locplayer.playerLeft) xd--;
+	if(locplayer.playerUp) yd--;
+	if(locplayer.playerDown) yd++;
+		
+	if(xd!=0 && yd!=0) locplayer.vel /=Math.sqrt(2);
+	if(locplayer.mouseDown) locplayer.vel/=2;
+  
+  xd*=locplayer.vel;
+	yd*=locplayer.vel;
+  
+  if(xd!=0 && yd!=0) locplayer.vel *=Math.sqrt(2);
+	if(locplayer.mouseDown) locplayer.vel*=2;
+
+  var rad = (locplayer.angle)*Math.PI/180;
+	locplayer.x+=xd*Math.cos(2*Math.PI-rad);
+	locplayer.x+=yd*Math.sin(rad);
+	locplayer.y+=xd*Math.sin(2*Math.PI-rad);
+	locplayer.y+=yd*Math.cos(rad);
+		
+	var sxr = locplayer.x | 0;
+	var syr = locplayer.y | 0;
+	var oxr = ox | 0;
+	var oyr = oy | 0;
+
+  var pwth = wth+0.25;
+  var locwalls = walls[locplayer.mapId];
+
+	if(locplayer.x<pwth/2) locplayer.x = pwth/2;
+	if(locplayer.x>locwalls[0].length-1-pwth/2) locplayer.x = locwalls[0].length-1-pwth/2;
+	if(locplayer.y<pwth/2) locplayer.y = pwth/2;
+	if(locplayer.y>locwalls.length-1-pwth/2) locplayer.y = locwalls.length-1-pwth/2;
+
+	var xwz = locplayer.x-sxr < pwth/2 || locplayer.x-sxr > 1-pwth/2;
+	var ywz = locplayer.y-syr < pwth/2 || locplayer.y-syr > 1-pwth/2;
+	var oxwz = ox-oxr < pwth/2 || ox-oxr > 1-pwth/2;
+  var oywz = oy-oyr < pwth/2 || oy-oyr > 1-pwth/2;
+
+	var xin = oxwz ? ((ox-oxr < pwth/2) ? 0 : 1) : ((locplayer.x-sxr<pwth/2) ? 0 : 1);
+	var yin = oywz ? ((oy-oyr < pwth/2) ? 0 : 1) : ((locplayer.y-syr<pwth/2) ? 0 : 1);
+
+	if(xwz&&!oxwz&&ywz&&!oywz) {
+		if(locwalls[oyr][oxr+xin][0][0]!=0 && locwalls[oyr+yin][oxr][1][0]!=0) {
+			locplayer.x = (locplayer.x<ox) ? oxr+pwth/2 : oxr+1-pwth/2;
+			locplayer.y = (locplayer.y<oy) ? oyr+pwth/2 : oyr+1-pwth/2;
+		} else if(locwalls[oyr][oxr+xin][0][0]!=0) {
+			locplayer.x = (locplayer.x<ox) ? oxr+pwth/2 : oxr+1-pwth/2;
+		} else if(locwalls[oyr+yin][oxr][1][0]!=0) {
+			locplayer.y = (locplayer.y<oy) ? oyr+pwth/2 : oyr+1-pwth/2;
+		} else if(locwalls[oyr+2*yin-1][oxr+xin][0][0]!=0){
+			locplayer.x = (locplayer.x<ox) ? oxr+pwth/2 : oxr+1-pwth/2;
+		} else if(locwalls[oyr+yin][oxr+2*xin-1][1][0]!=0) {
+			locplayer.y = (locplayer.y<oy) ? oyr+pwth/2 : oyr+1-pwth/2;
+		}
+  } else if(xwz&&!oxwz&&ywz) {
+    if((locwalls[oyr+yin-1]!=null && locwalls[oyr+yin-1][oxr+xin][0][0]!=0) || 
+      locwalls[oyr+yin][oxr+xin][0][0]!=0 ||
+      locwalls[oyr+yin][oxr+2*xin-1][1][0]!=0) {
+      locplayer.x = (locplayer.x<ox) ? oxr+pwth/2 : oxr+1-pwth/2;
+    }
+  } else if(xwz&&ywz&&!oywz){
+    if((locwalls[oyr+yin][oxr+xin-1]!=null && locwalls[oyr+yin][oxr+xin-1][1][0]!=0) || 
+      locwalls[oyr+yin][oxr+xin][1][0]!=0 ||
+      locwalls[oyr+2*yin-1][oxr+xin][0][0]!=0) {
+      locplayer.y = (locplayer.y<oy) ? oyr+pwth/2 : oyr+1-pwth/2;
+    }
+  } else if(xwz&&!oxwz) {
+    if(locwalls[oyr][oxr+xin][0][0]!=0) {
+      locplayer.x = (locplayer.x<ox) ? oxr+pwth/2 : oxr+1-pwth/2;
+    }
+  } else if(ywz&&!oywz) {
+    if(locwalls[oyr+yin][oxr][1][0]!=0) {
+      locplayer.y = (locplayer.y<oy) ? oyr+pwth/2 : oyr+1-pwth/2;
+    }
+	}	
+
+	locplayer.moveId = 0;
+	var d = new Date();
+	var n = d.getTime();
+	var moving = locplayer.playerDown || locplayer.playerUp || locplayer.playerLeft || locplayer.playerRight;
+		
+	if(moving && n%(locplayer.walkspeed*4)<=locplayer.walkspeed) locplayer.moveId=3;
+	else if(moving && n%(locplayer.walkspeed*4)<=locplayer.walkspeed*2) locplayer.moveId=0;
+	else if(moving && n%(locplayer.walkspeed*4)<=locplayer.walkspeed*3) locplayer.moveId=6;
+	else if(moving) locplayer.moveId = 0;
+}
+
+function updateMouseAngle() {
+  locplayer.mouseAngle = (Math.atan2((mousePos.y-size.height/2+0.6*lw)/(1-locplayer.alt), (mousePos.x-size.width/2))/ Math.PI * 180-locplayer.angle+720) % 360;
+}
+
+function updateBullets() {
+  for(var i = 0; i<locplayer.bullets.length; i++) {
+    var bullet = locplayer.bullets[i];
+    if(!updateBullet(bullet)) {
+      locplayer.bullets.splice(i, 1);
+      i--;
+    }
+  }
+}
+
+function updateBullet(bullet) {
+  var ox = bullet.x;
+	var oy = bullet.y;
+	bullet.x += Math.cos(bullet.angle/180*Math.PI)*bullet.vel;
+  bullet.y += Math.sin(bullet.angle/180*Math.PI)*bullet.vel;
+  
+  var locwalls = walls[locplayer.mapId];
+
+  if(bullet.x<0 || bullet.x>locwalls[0].length-1) {
+    return false;
+  }
+	else if(bullet.y<0 || bullet.y>locwalls.length-1) {
+    return false;
+  }
+
+  var pwth = wth;
+
+	var sxr = bullet.x | 0;
+	var syr = bullet.y | 0;
+	var oxr = ox | 0;
+	var oyr = oy | 0;
+
+	var xwz = bullet.x-sxr < pwth/2 || bullet.x-sxr > 1-pwth/2 || sxr!=oxr;
+	var ywz = bullet.y-syr < pwth/2 || bullet.y-syr > 1-pwth/2 || syr!=oyr;
+
+	var xin = (ox-oxr < .5) ? 0 : 1;
+	var yin = (oy-oyr < .5) ? 0 : 1;
+
+	if(xwz && ywz) {
+		if((locwalls[oyr][oxr+xin]!=null && locwalls[oyr][oxr+xin][0][0]) || 
+	   	(locwalls[oyr+yin]!=null && locwalls[oyr+yin][oxr][1][0]) ||
+	   	(locwalls[oyr+2*yin-1]!=null && locwalls[oyr+2*yin-1][oxr+xin]!=null && locwalls[oyr+2*yin-1][oxr+xin][0][0]) ||
+	  	(locwalls[oyr+yin]!=null && locwalls[oyr+yin][oxr+2*xin-1]!=null && locwalls[oyr+yin][oxr+2*xin-1][1][0])) {
+      return false;
+		}
+	} else if(xwz) {
+		if(locwalls[oyr][oxr+xin]!=null && locwalls[oyr][oxr+xin][0][0]) {
+      return false;
+		}
+	} else if(ywz) {
+		if(locwalls[oyr+yin]!=null && locwalls[oyr+yin][oxr][1][0]) {
+      return false;
+		}
+  }
+  return true;
+}
+
+function bulletZombieColls() {
+  if(gldata==null) return [];
+
+  var conns = [];
+  var smap = [];
+
+  var locfloor = floor[locplayer.mapId];
+
+  for(var i = 0; i<locfloor.length; i++) {
+    var inp = []
+    for(var j = 0; j<locfloor[0].length; j++) {
+      inp.push([]);
+    }
+    smap.push(inp);
+  }
+
+  for(var i in gldata.zombie) {
+    var zombie = gldata.zombie[i];
+    smap[zombie.y | 0][zombie.x | 0].push(zombie);
+  }
+
+  for(var i in locplayer.bullets) {
+    var bullet = locplayer.bullets[i];
+    var locchecks = smap[bullet.y | 0][bullet.x | 0];
+
+    for(var j in locchecks) {
+      var zombie = locchecks[j];
+      if (bullet.x > zombie.x-0.2 && bullet.x < zombie.x+0.2  && 
+          bullet.y > zombie.y-0.2 && bullet.y < zombie.y+0.2) {
+          conns.push([zombie.id, bullet.damage]);
+          locplayer.bullets.splice(i, 1);
+          i--;
+          break;
+      }
+    
+    }
+  }
+
+  return conns;
+}
+
+function shoot() {
+	var nx = locplayer.x + Math.cos(locplayer.mouseAngle/180*Math.PI)*0.4;
+	var ny = locplayer.y + Math.sin(locplayer.mouseAngle/180*Math.PI)*0.4;
+	var bul = Bullet(id,nx,ny,locplayer.mouseAngle);
+  locplayer.bullets.push(bul);
+}
+
+var Bullet = function(sid,x,y,ang) {
+	var self = {
+		x:x,
+		y:y,
+		type:"n/a",
+		angle:ang,
+		vel:0.05,
+		damage:20
+	}
+
+	return self;
+}
+
+setInterval(function(){
+  if(locplayer==null) return;
+  updateLocs();
+  if(locplayer.mouseDown) shoot();
+  var zHits = bulletZombieColls();
+  
+  var pack = {
+    player:locplayer,
+    zombieHits:zHits
+  };
+
+	pack = JSON.stringify(pack);
+	socket.emit('move', pack);
+}, 1000/60);
