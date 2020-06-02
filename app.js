@@ -36,28 +36,35 @@ var Player = function(sid) {
 	var self = {
 		x:1,
 		y:1,
+		
 		id:sid,
+		mapId:0,
+		imgId:0,
+		moveId:0,
+
+		vel:0.06,
+		rotateVel:3.5,
+		altVel:.01,
+		walkspeed:150,
+
+		mouseAngle:0,
+		angle:0,
+		alt:0.8,
+
 		bullets:[],
+		health:100,
+		
+		lastUpdated:new Date().getTime(),
+
 		playerUp:false,
 		playerDown:false,
 		playerLeft:false,
 		playerRight:false,
 		mouseDown:false,
-		mouseAngle:0,
 		rotateLeft:false,
 		rotateRight:false,
 		altUp:false,
-		altDown:false,
-		vel:0.06,
-		rotateVel:3.5,
-		altVel:.01,
-		angle:0,
-		alt:0.8,
-		mapId:0,
-		imgId:0,
-		moveId:0,
-		walkspeed:150,
-		lastUpdated:new Date().getTime(),
+		altDown:false
 	}
 
 	Player.list[self.id] = self;

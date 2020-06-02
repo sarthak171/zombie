@@ -801,8 +801,8 @@ var Bullet = function(sid,x,y,ang) {
 
 setInterval(function(){
   if(locplayer==null) return;
-  updateLocs();
   if(locplayer.mouseDown) shoot();
+  updateLocs();
   var zHits = bulletZombieColls();
   
   var pack = {
