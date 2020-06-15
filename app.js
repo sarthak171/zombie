@@ -1,4 +1,3 @@
-//tester
 var express = require('express')
 var app = express();
 var server = require('http').Server(app);
@@ -76,18 +75,23 @@ Player.onConnect = function(socket){
 	var player = Player(socket.id);
 	socket.on('move',function(pack){
 		var data = JSON.parse(pack);
-		processZombieHits(data.zombieHits);
+		processbzHits(data.bzHits);
+		processzpHits(data.zpHits);
 		Player.list[player.id] = data.player;
 	});
 } 
 
-function processZombieHits(hits) {
+function processbzHits(hits) {
 	for(var i in hits) {
 		var hit = hits[i];
 		if(Zombie.list[hit[0]]==null) continue;
 		Zombie.list[hit[0]].health-=hit[1];
 		if(Zombie.list[hit[0]].health<=0) delete Zombie.list[hit[0]];
 	}
+}
+
+function processzpHits(hits) {
+	
 }
 
 Player.onDisconnect = function(socket){
@@ -103,6 +107,7 @@ var Zombie = function(sid,x,y){
 		x:x,
 		y:y,
 		vel:.01,
+		angle: 0.0,
 		health:100,
 		id:sid,
 		mapId:0,
@@ -113,9 +118,8 @@ var Zombie = function(sid,x,y){
 		var ox = self.x;
 		var oy = self.y;
 
-		var angle = self.getAngle();
-		self.x += Math.cos(angle/180*Math.PI)*self.vel;
-		self.y += Math.sin(angle/180*Math.PI)*self.vel;
+		self.x += Math.cos(self.angle/180*Math.PI)*self.vel;
+		self.y += Math.sin(self.angle/180*Math.PI)*self.vel;
 
 		var locwalls = walls[self.mapId];
 
@@ -174,10 +178,7 @@ var Zombie = function(sid,x,y){
             }
 		}
 	}
-	self.getAngle = function() {
-		//complete
-		return 45;
-	}
+
 	Zombie.list[self.id] = self;
 	return self;
 }
@@ -185,10 +186,16 @@ var Zombie = function(sid,x,y){
 Zombie.list = {};
 zcnt = 0;
 Zombie.update = function(){
+	setZombieMovement();
+
 	for(var i in Zombie.list){
 		Zombie.list[i].updateZomb();
 	}
 	return Zombie.list;
+}
+
+function setZombieMovement() {
+
 }
 
 var io = require('socket.io')(server,{});
@@ -223,3 +230,118 @@ setInterval(function(){
 		SOCKET_LIST[i].emit('newPositions',pack);
 	}
 }, 1000/60);
+
+
+const top = 0;
+const parent = i => ((i + 1) >>> 1) - 1;
+const left = i => (i << 1) + 1;
+const right = i => (i + 1) << 1;
+
+class PriorityQueue {
+  constructor(comparator = (a, b) => a > b) {
+    this._heap = [];
+    this._comparator = comparator;
+  }
+  size() {
+    return this._heap.length;
+  }
+  isEmpty() {
+    return this.size() == 0;
+  }
+  peek() {
+    return this._heap[top];
+  }
+  push(...values) {
+    values.forEach(value => {
+      this._heap.push(value);
+      this._siftUp();
+    });
+    return this.size();
+  }
+  pop() {
+    const poppedValue = this.peek();
+    const bottom = this.size() - 1;
+    if (bottom > top) {
+      this._swap(top, bottom);
+    }
+    this._heap.pop();
+    this._siftDown();
+    return poppedValue;
+  }
+  replace(value) {
+    const replacedValue = this.peek();
+    this._heap[top] = value;
+    this._siftDown();
+    return replacedValue;
+  }
+  _greater(i, j) {
+    return this._comparator(this._heap[i], this._heap[j]);
+  }
+  _swap(i, j) {
+    [this._heap[i], this._heap[j]] = [this._heap[j], this._heap[i]];
+  }
+  _siftUp() {
+    let node = this.size() - 1;
+    while (node > top && this._greater(node, parent(node))) {
+      this._swap(node, parent(node));
+      node = parent(node);
+    }
+  }
+  _siftDown() {
+    let node = top;
+    while (
+      (left(node) < this.size() && this._greater(left(node), node)) ||
+      (right(node) < this.size() && this._greater(right(node), node))
+    ) {
+      let maxChild = (right(node) < this.size() && this._greater(right(node), left(node))) ? right(node) : left(node);
+      this._swap(node, maxChild);
+      node = maxChild;
+    }
+  }
+}
+
+function fillArray(value, len) {
+	var arr = [];
+	for (var i = 0; i < len; i++) {
+	  arr.push(value);
+	}
+	return arr;
+  }
+
+function dijkstra(adjList, src) {
+	var dist = fillArray(1000000, adjList.length);
+	var path = fillArray(-1, adjList.length);
+	const pq = new PriorityQueue((a,b) => a[1] > b[1]);
+	var settled = new Set();
+	
+	pq.push([src, 0]);
+	dist[src] = 0;
+	path[src] = src;
+
+	while(!pq.isEmpty()) {
+		var u = pq.pop()[0];
+		settled.add(u);
+		e_Neighbors(u, adjList, dist, path, settled, pq);
+	}
+}
+
+function e_Neighbors(u, adjList, dist, path, settled, pq) {
+	var edgeDistance = 1;
+	var newDistance = 1;
+	
+	for(var i = 0; i<adjList[u].length; i++) {
+		var v = adjList[u][i];
+		if(!settled.has(v[0])) {
+			edgeDistance = v[1];
+			newDistance = dist[u]+edgeDistance;
+
+			if(newDistance < dist[v[0]]) {
+				dist[v[0]] = newDistance;
+
+				if(v[0] == src) path[v[0]] = v[0];
+				else path[v[0]] = path[u];
+				pq.push([v[0], dist[v[0]]]);
+			}
+		}
+	}
+}

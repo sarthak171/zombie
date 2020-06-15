@@ -754,9 +754,19 @@ function bulletZombieColls() {
     smap.push(inp);
   }
 
+  var radixlocs, sx, sy;
   for(var i in gldata.zombie) {
+    radixlocs = [];
     var zombie = gldata.zombie[i];
-    smap[zombie.y | 0][zombie.x | 0].push(zombie);
+
+    for(var j = 0; j<4; j++) {
+      sx = Math.floor(zombie.x + 0.2*(2*Math.floor(j/2)-1));
+      sy = Math.floor(zombie.y + 0.2*(2*(j%2)-1));
+      if(radixlocs.includes(hashLoc(sx, sy))) continue;
+
+      smap[sy][sx].push(zombie);
+      radixlocs.push(hashLoc(sx, sy));
+    }
   }
 
   for(var i in locplayer.bullets) {
@@ -773,6 +783,32 @@ function bulletZombieColls() {
           break;
       }
     
+    }
+  }
+
+  return conns;
+}
+
+function playerZombieColls() {
+  var conns = [];
+
+  var prect = [
+    [locplayer.x-0.15, locplayer.y-0.15],
+    [locplayer.x+0.15, locplayer.y+0.15]
+  ];
+
+  var zombie, zrect;
+  for(var i in gldata.zombie) {
+    zombie = gldata.zombie[i];
+    zrect = [
+      [zombie.x-0.2, zombie.y-0.2],
+      [zombie.x+0.2, zombie.y+0.2]
+    ];
+
+    if(checkRectOverlap(prect, zrect)) {
+      conns.push(zombie.id);
+      locplayer.health--;
+      console.log(locplayer.health);
     }
   }
 
@@ -799,15 +835,42 @@ var Bullet = function(sid,x,y,ang) {
 	return self;
 }
 
+function checkRectOverlap(rect1, rect2) {
+
+  //Check whether there is an x overlap
+  if ((rect1[0][0] < rect2[0][0] && rect2[0][0] < rect1[1][0]) //Event that x3 is inbetween x1 and x2
+      || (rect1[0][0] < rect2[1][0] && rect2[1][0] < rect1[1][0]) //Event that x4 is inbetween x1 and x2
+      || (rect2[0][0] < rect1[0][0] && rect1[1][0] < rect2[1][0])) {  //Event that x1 and x2 are inbetween x3 and x4
+      //Check whether there is a y overlap using the same procedure
+      if ((rect1[0][1] < rect2[0][1] && rect2[0][1] < rect1[1][1]) //Event that y3 is between y1 and y2
+          || (rect1[0][1] < rect2[1][1] && rect2[1][1] < rect1[1][1]) //Event that y4 is between y1 and y2
+          || (rect2[0][1] < rect1[0][1] && rect1[1][1] < rect2[1][1])) { //Event that y1 and y2 are between y3 and y4
+          return true;
+      }
+  }
+  return false;
+}
+
+function hashLoc(x, y) {
+  return 1000*x+y;
+}
+
+function reverseHash(val) {
+  return [Math.floor(val/1000), val%1000];
+}
+
 setInterval(function(){
   if(locplayer==null) return;
   if(locplayer.mouseDown) shoot();
   updateLocs();
-  var zHits = bulletZombieColls();
+
+  var bzHits = bulletZombieColls();
+  var zpHits = playerZombieColls();
   
   var pack = {
     player:locplayer,
-    zombieHits:zHits
+    bzHits:bzHits,
+    zpHits:zpHits
   };
 
 	pack = JSON.stringify(pack);
